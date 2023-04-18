@@ -27,11 +27,8 @@ module.exports = {
     'prefer-arrow-callback': 'error',
     'prefer-const': 'error',
     'func-style': ['error', 'expression'],
-    'arrow-body-style': ['error', 'always'],
-    'no-restricted-imports': [
-      'error',
-      { paths: [{ name: 'react', importNames: ['default'] }] },
-    ],
+    'arrow-body-style': ['error', 'as-needed'],
+    'no-restricted-imports': ['error', { paths: [{ name: 'react', importNames: ['default'] }] }],
 
     // react
     'react/display-name': 'error',
@@ -45,40 +42,34 @@ module.exports = {
       },
     ],
     'react/destructuring-assignment': ['error', 'always'],
-    'react/function-component-definition': [
-      2,
-      { namedComponents: 'arrow-function' },
-    ],
+    'react/function-component-definition': [2, { namedComponents: 'arrow-function' }],
 
     // sort
-    'import/no-default-export': 'error',
+    // 'import/no-default-export': 'error',
     'simple-import-sort/imports': 'error',
     'simple-import-sort/exports': 'error',
     'import/first': 'error',
     'import/newline-after-import': 'error',
     'import/no-duplicates': 'error',
     'unused-imports/no-unused-imports': 'error',
-    'sort-keys-custom-order/object-keys': [
-      'error',
-      {
-        orderedKeys: ['id', 'name', 'title'],
-      },
-    ],
-    'sort-keys-custom-order/type-keys': [
-      'error',
-      {
-        orderedKeys: ['id', 'name', 'title'],
-      },
-    ],
+    // 'sort-keys-custom-order/object-keys': [
+    //   'error',
+    //   {
+    //     orderedKeys: ['id', 'name', 'title'],
+    //   },
+    // ],
+    // 'sort-keys-custom-order/type-keys': [
+    //   'error',
+    //   {
+    //     orderedKeys: ['id', 'name', 'title'],
+    //   },
+    // ],
 
     // @typescript-eslint
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/consistent-type-imports': [
-      'error',
-      { prefer: 'type-imports' },
-    ],
+    '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
   },
   overrides: [
     {

@@ -7,11 +7,21 @@
   // ESLint, Prettierの設定
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": [
-    "source.addMissingImports",
-    "source.fixAll.eslint"
-  ],
+  "editor.codeActionsOnSave": ["source.addMissingImports", "source.fixAll.eslint"],
   "editor.quickSuggestions": {
     "strings": true
-  }
+  },
+  "cSpell.words": [
+    "Autosize",
+    "bodyparts",
+    "hexa",
+    "immer",
+    "Keypoint",
+    "keypoints",
+    "papaparse",
+    "PIXI",
+    "tailwindcss",
+    "unparse",
+    "zustand"
+  ]
 }
