@@ -1,5 +1,5 @@
 import { Drawer, Flex, Navbar, ScrollArea, Stack, Text } from '@mantine/core';
-import type { FC } from 'react';
+import type { FC, RefObject } from 'react';
 import { useState } from 'react';
 
 import { SearchVideo, VideoAddIconButton } from '@/components/Sidebar';
@@ -7,20 +7,20 @@ import { VideoListItem } from '@/components/Sidebar/VideoListItem';
 import type { Video } from '@/types';
 
 type Props = {
-  video: HTMLVideoElement | null;
+  videoRef: RefObject<HTMLVideoElement>;
   showDrawer: boolean;
   videos: Video[];
-  selectVideoIndex: number;
+  currentVideoIndex: number;
   onClose: () => void;
   onAddVideo: (files: File[]) => void;
   onSelectVideo: (index: number, video: HTMLVideoElement | null) => void;
 };
 
 export const SidebarDrawer: FC<Props> = ({
-  video: videoElement,
+  videoRef,
   showDrawer,
   videos,
-  selectVideoIndex,
+  currentVideoIndex,
   onAddVideo,
   onSelectVideo,
   onClose,
@@ -47,15 +47,21 @@ export const SidebarDrawer: FC<Props> = ({
         <Navbar.Section grow p='md' component={ScrollArea}>
           <Stack justify='center' spacing={0}>
             <Flex align='center' justify='space-between' pl='sm' mb='sm'>
-              <Text color='gray'>VideoList</Text>
+              <Text
+                sx={(theme) => ({
+                  color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.gray[9],
+                })}
+              >
+                VideoList
+              </Text>
               <VideoAddIconButton onAddVideo={onAddVideo} />
             </Flex>
             {filterVideos.map((video, index) => (
               <VideoListItem
                 key={video.name}
                 video={video}
-                active={index === selectVideoIndex}
-                onSelectVideo={() => onSelectVideo(index, videoElement)}
+                active={index === currentVideoIndex}
+                onSelectVideo={() => onSelectVideo(index, videoRef.current)}
               />
             ))}
           </Stack>

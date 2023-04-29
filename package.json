@@ -1,5 +1,5 @@
 {
-  "name": "next-mantine-template",
+  "name": "pose-annotator",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -26,6 +26,7 @@
     "@mantine/core": "^6.0.6",
     "@mantine/hooks": "^6.0.6",
     "@mantine/next": "^6.0.6",
+    "@pixi/react": "^7.0.3",
     "canvas": "^2.11.2",
     "jszip": "^3.10.1",
     "konva": "^8.4.3",
@@ -36,11 +37,8 @@
     "react-dom": "^18.2.0",
     "react-icons": "^4.8.0",
     "react-konva": "^18.2.5",
-    "react-player": "^2.12.0",
     "remeda": "^1.12.0",
-    "use-image": "^1.1.0",
-    "uuid": "^9.0.0",
-    "zustand": "^4.3.7"
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.9",

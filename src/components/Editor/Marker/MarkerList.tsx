@@ -4,24 +4,24 @@ import type { FC } from 'react';
 import type { MarkerOption } from '@/types';
 
 type Props = {
-  markers: MarkerOption[];
-  selectMarkerIndex: number;
+  markerOptions: MarkerOption[];
+  currentMarkerIndex: number;
   onChangeRadio: (value: string) => void;
 };
 
-export const MarkerList: FC<Props> = ({ markers, selectMarkerIndex, onChangeRadio }) => (
+export const MarkerList: FC<Props> = ({ markerOptions, currentMarkerIndex, onChangeRadio }) => (
   <ScrollArea.Autosize
     style={{
       maxHeight: 'calc(100vh - 230px - 250px)',
     }}
   >
     <Radio.Group
-      name='markers'
-      value={markers[selectMarkerIndex]?.label}
+      name='markerOptions'
+      value={markerOptions[currentMarkerIndex]?.label}
       onChange={onChangeRadio}
       className='space-y-3'
     >
-      {markers.map((marker) => (
+      {markerOptions.map((marker) => (
         <Radio key={marker.label} value={marker.label} label={marker.label} color='orange' />
       ))}
     </Radio.Group>

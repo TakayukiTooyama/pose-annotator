@@ -8,12 +8,12 @@ import type { FC } from 'react';
 import { useDarkMode } from '@/hooks/useDarkMode';
 
 const App: FC<AppProps> = ({ Component, pageProps }) => {
-  const { colorScheme, toggleColorScheme } = useDarkMode(); // カスタムフックを使用
+  const { colorScheme, toggleColorScheme } = useDarkMode();
 
   return (
     <>
       <Head>
-        <title>Next x Tailwind Starter</title>
+        <title>Pose Annotator</title>
         <meta name='viewport' content='minimum-scale=1, initial-scale=1, width=device-width' />
       </Head>
 

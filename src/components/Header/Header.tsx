@@ -21,7 +21,14 @@ export const HeaderContents: FC<Props> = ({ frames, onClick, onClickDownloadData
         <ActionIcon variant='default' size='lg' onClick={onClick}>
           <TbLayoutSidebar size='1.2rem' />
         </ActionIcon>
-        <Title size='h3'>Pose Annotator</Title>
+        <Title
+          size='h3'
+          sx={(theme) => ({
+            color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.gray[9],
+          })}
+        >
+          Pose Annotator
+        </Title>
         <Group>
           <ActionIcon
             variant='default'

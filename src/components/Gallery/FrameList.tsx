@@ -9,7 +9,7 @@ type Props = {
   frameUrl: string[];
   onSelectFrame: (index: number) => void;
   viewport: React.RefObject<HTMLDivElement>;
-  selectFrameIndex: number;
+  currentFrameIndex: number;
 };
 
 export const FrameList: FC<Props> = ({
@@ -17,7 +17,7 @@ export const FrameList: FC<Props> = ({
   frameUrl,
   onSelectFrame,
   viewport,
-  selectFrameIndex,
+  currentFrameIndex,
 }) => (
   <>
     <ScrollArea className='h-32 w-full' viewportRef={viewport}>
@@ -35,7 +35,7 @@ export const FrameList: FC<Props> = ({
             <div
               className='absolute left-0 top-0 z-10 h-full w-full'
               style={{
-                border: index === selectFrameIndex ? '3px solid red' : '',
+                border: index === currentFrameIndex ? '3px solid red' : '',
               }}
             />
             <Image src={frameUrl[index]} alt='screenshot' fill style={{ objectFit: 'cover' }} />

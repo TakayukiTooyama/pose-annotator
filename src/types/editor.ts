@@ -1,53 +1,4 @@
-// export const bodyParts = {
-//   right_ear: '右耳',
-//   left_ear: '左耳',
-//   right_shoulder: '右肩',
-//   left_shoulder: '左肩',
-//   right_elbow: '右肘',
-//   left_elbow: '左肘',
-//   right_wrist: '右手首',
-//   left_wrist: '左手首',
-//   right_index: '右手先',
-//   left_index: '左手先',
-//   right_hip: '右臀部',
-//   left_hip: '左臀部',
-//   right_knee: '右膝',
-//   left_knee: '左膝',
-//   right_ankle: '右足首',
-//   left_ankle: '左足首',
-//   right_heel: '右踵',
-//   left_heel: '左踵',
-//   right_foot_index: '右つま先',
-//   left_foot_index: '左つま先',
-// } as const;
-
-// 'dark' |
-//   'gray' |
-//   'red' |
-//   'pink' |
-//   'grape' |
-//   'violet' |
-//   'indigo' |
-//   'blue' |
-//   'cyan' |
-//   'green' |
-//   'lime' |
-//   'yellow' |
-//   'orange' |
-//   'teal' |
-//   (string & {});
-
-export type MarkerSetting = {
-  radius: number;
-  opacity: number;
-};
-
-export const defaultMarkerSetting: MarkerSetting = {
-  radius: 3,
-  opacity: 0.9,
-};
-
-export const defaultMarkerOption = [
+export const defaultMarkerOption: MarkerOption[] = [
   { id: '0', label: 'REar', color: '#D000FF' },
   { id: '1', label: 'RShoulder', color: '#564E00' },
   { id: '2', label: 'RElbow', color: '#AB9A00' },
@@ -70,12 +21,21 @@ export const defaultMarkerOption = [
   { id: '19', label: 'LFootIndex', color: '#0015FF' },
 ];
 
-export const defaultMarkers = defaultMarkerOption.reduce(
-  (acc, { label }) => ({ ...acc, [label]: null }),
-  {},
-);
+export type MarkerSetting = {
+  radius: number;
+  opacity: number;
+  options: MarkerOption[];
+};
 
+export const defaultMarkerSetting: MarkerSetting = {
+  radius: 3,
+  opacity: 0.9,
+  options: defaultMarkerOption,
+};
+
+// ローカルストレージに保存
 export type VideoFrames = Record<string, Frame[]>;
+export type FrameMarkers = Record<string, Marker[]>;
 
 export type MarkerOption = {
   id: string;
@@ -94,7 +54,6 @@ export type Frame = {
   name: string;
   dimensions: Dimensions;
   size: number;
-  markers: Marker[];
   videoName: string;
 };
 
@@ -112,6 +71,8 @@ export type Position = {
   x: number;
   y: number;
 };
+
+export type Scale = Position;
 
 /* Object.entriesの返り値([string, number | string][])を厳格に宣言するために使用 */
 export const strictEntries = <T extends Record<string, any>>(object: T): [keyof T, T[keyof T]][] =>

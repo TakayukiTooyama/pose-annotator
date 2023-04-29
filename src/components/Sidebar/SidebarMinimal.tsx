@@ -6,14 +6,14 @@ import type { Video } from '@/types';
 
 type Props = {
   videos: Video[];
-  selectVideoIndex: number;
+  currentVideoIndex: number;
   onAddVideo: (payload: File[]) => void;
   onClickVideoLink: (index: number, video: Video) => void;
 };
 
 export const SidebarMinimal: FC<Props> = ({
   videos,
-  selectVideoIndex,
+  currentVideoIndex,
   onAddVideo,
   onClickVideoLink,
 }) => (
@@ -27,7 +27,7 @@ export const SidebarMinimal: FC<Props> = ({
             key={video.name}
             index={`${index + 1}`}
             label={video.name}
-            active={index === selectVideoIndex}
+            active={index === currentVideoIndex}
             onClick={() => onClickVideoLink(index, video)}
           />
         ))}

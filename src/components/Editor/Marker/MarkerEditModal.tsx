@@ -1,66 +1,66 @@
 import type { DragEndEvent } from '@dnd-kit/core';
 import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Modal, Stack, TextInput } from '@mantine/core';
-import type { FC, KeyboardEvent } from 'react';
+import { useClickOutside } from '@mantine/hooks';
+import type { FC, FormEvent, KeyboardEvent } from 'react';
 import { memo } from 'react';
 
 import { MarkerEditModalListItem } from '@/components/Editor/Marker/MarkerEditModalListItem';
 import type { MarkerOption } from '@/types';
 
 type Props = {
+  isEdit: boolean;
   showModal: boolean;
-  markers: MarkerOption[];
-  inputLabel: string;
-  newInputLabel: string;
+  markerOptions: MarkerOption[];
+  editingLabel: string;
+  newLabel: string;
   showColorPicker: boolean;
-  selectMarker: MarkerOption | null;
-  colorPickerRef: React.RefObject<HTMLDivElement>;
+  selectedMarker: MarkerOption | null;
   onCloseModal: () => void;
-  onCreateMarker: (e: KeyboardEvent<HTMLInputElement>, inputLabel: string) => void;
-  onDeleteMarker: (marker: MarkerOption) => void;
-  onBlurSaveLabel: (marker: MarkerOption) => void;
-  onKeyDownSaveLabel: (e: KeyboardEvent<HTMLInputElement>, marker: MarkerOption) => void;
-  setMarkers: (markers: MarkerOption[]) => Promise<void>;
-  onCreateLabel: (e: React.FormEvent<HTMLInputElement>) => void;
-  onUpdateLabel: (e: React.FormEvent<HTMLInputElement>) => void;
-  onShowColorPicker: (marker: MarkerOption) => void;
-  onChangeColor: (value: string, marker: MarkerOption) => void;
-  onChangeEdit: (selectMarker: MarkerOption) => void;
+  onCreateMarkerOption: (e: KeyboardEvent<HTMLInputElement>, inputLabel: string) => void;
+  onDeleteMarkerOption: (label: string) => void;
+  onToggleColorPicker: (selectedMarker: MarkerOption | null) => void;
+  onUpdateMarkerColor: (color: string, selectOption: MarkerOption) => void;
+  onChangeNewLabel: (e: FormEvent<HTMLInputElement>) => void;
+  onChangeEditingLabel: (e: FormEvent<HTMLInputElement>) => void;
+  onUpdateEditingLabel: (selectOption: MarkerOption) => void;
+  onEnterKeyPress: (e: KeyboardEvent<Element>, selectOption: MarkerOption) => void;
+  onShowEditingLabelInput: (selectedMarker: MarkerOption) => void;
+  onDragEnd: ({ active, over }: DragEndEvent) => void;
 };
 
 export const MarkerEditModal: FC<Props> = memo(
   ({
+    isEdit,
     showModal,
-    markers,
-    newInputLabel,
-    inputLabel,
+    markerOptions,
+    editingLabel,
+    newLabel,
     showColorPicker,
-    selectMarker,
-    colorPickerRef,
+    selectedMarker,
     onCloseModal,
-    onCreateMarker,
-    onDeleteMarker,
-    onChangeColor,
-    onBlurSaveLabel,
-    onKeyDownSaveLabel,
-    setMarkers,
-    onCreateLabel,
-    onUpdateLabel,
-    onShowColorPicker,
-    onChangeEdit,
+    onCreateMarkerOption,
+    onDeleteMarkerOption,
+    onToggleColorPicker,
+    onUpdateMarkerColor,
+    onChangeNewLabel,
+    onChangeEditingLabel,
+    onUpdateEditingLabel,
+    onEnterKeyPress,
+    onShowEditingLabelInput,
+    onDragEnd,
   }) => {
-    const sensors = useSensors(useSensor(PointerSensor));
+    const sensors = useSensors(
+      useSensor(PointerSensor, {
+        activationConstraint: {
+          distance: 10,
+        },
+      }),
+    );
 
-    const handleDragEnd = ({ active, over }: DragEndEvent) => {
-      if (over && active.id !== over.id) {
-        const oldIndex = markers.findIndex((marker) => marker.id === active.id);
-        const newIndex = markers.findIndex((marker) => marker.id === over.id);
-
-        setMarkers(arrayMove(markers, oldIndex, newIndex));
-      }
-    };
+    const colorPickerRef = useClickOutside(() => onToggleColorPicker(selectedMarker));
 
     return (
       <Modal.Root opened={showModal} onClose={onCloseModal} size='sm' padding='xl' centered>
@@ -85,34 +85,35 @@ export const MarkerEditModal: FC<Props> = memo(
               <TextInput
                 label='English-only input'
                 placeholder='+ Label'
-                value={newInputLabel}
-                onChange={onCreateLabel}
-                onKeyDown={(e) => onCreateMarker(e, newInputLabel)}
+                value={newLabel}
+                onChange={onChangeNewLabel}
+                onKeyDown={(e) => onCreateMarkerOption(e, newLabel)}
               />
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
-                onDragEnd={(e) => handleDragEnd(e)}
-                onDragCancel={handleDragEnd}
+                onDragEnd={onDragEnd}
+                onDragCancel={onDragEnd}
                 modifiers={[restrictToVerticalAxis]}
               >
-                <SortableContext items={markers} strategy={verticalListSortingStrategy}>
+                <SortableContext items={markerOptions} strategy={verticalListSortingStrategy}>
                   <div className='grid w-full p-4'>
-                    {markers.map((marker) => (
+                    {markerOptions?.map((marker) => (
                       <MarkerEditModalListItem
                         key={marker.id}
+                        isEdit={isEdit}
                         marker={marker}
-                        inputLabel={inputLabel}
+                        editingLabel={editingLabel}
                         showColorPicker={showColorPicker}
-                        selectMarker={selectMarker}
+                        selectedMarker={selectedMarker}
                         colorPickerRef={colorPickerRef}
-                        onDeleteMarker={onDeleteMarker}
-                        onChangeColor={onChangeColor}
-                        onBlurSaveLabel={onBlurSaveLabel}
-                        onKeyDownSaveLabel={onKeyDownSaveLabel}
-                        onUpdateLabel={onUpdateLabel}
-                        onShowColorPicker={onShowColorPicker}
-                        onChangeEdit={onChangeEdit}
+                        onDeleteMarkerOption={onDeleteMarkerOption}
+                        onUpdateMarkerColor={onUpdateMarkerColor}
+                        onUpdateEditingLabel={onUpdateEditingLabel}
+                        onEnterKeyPress={onEnterKeyPress}
+                        onChangeEditingLabel={onChangeEditingLabel}
+                        onToggleColorPicker={onToggleColorPicker}
+                        onShowEditingLabelInput={onShowEditingLabelInput}
                       />
                     ))}
                   </div>
@@ -126,11 +127,11 @@ export const MarkerEditModal: FC<Props> = memo(
   },
   (prevProps, nextProps) =>
     prevProps.showModal === nextProps.showModal &&
-    prevProps.markers === nextProps.markers &&
-    prevProps.selectMarker === nextProps.selectMarker &&
+    prevProps.markerOptions === nextProps.markerOptions &&
+    prevProps.selectedMarker === nextProps.selectedMarker &&
     prevProps.showColorPicker === nextProps.showColorPicker &&
-    prevProps.newInputLabel === nextProps.newInputLabel &&
-    prevProps.inputLabel === nextProps.inputLabel,
+    prevProps.newLabel === nextProps.newLabel &&
+    prevProps.editingLabel === nextProps.editingLabel,
 );
 
 MarkerEditModal.displayName = 'MarkerEditModal';

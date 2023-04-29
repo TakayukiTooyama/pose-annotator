@@ -1,4 +1,4 @@
-import type { Frame, MarkerOption } from '@/types';
+import type { Frame, FrameMarkers, MarkerOption } from '@/types';
 
 export const generateNewColor = () => {
   const hexColorRep = Array.from({ length: 6 }, () => {
@@ -38,41 +38,49 @@ export const formatBytes = (bytes: number, decimals = 0) => {
 export const removeExtension = (filename: string) =>
   filename.substring(0, filename.lastIndexOf('.'));
 
+export const extractFilename = (id: string) => id.replace(/-\d+$/, '');
+
+export const extractFrameNumber = (id: string): number => {
+  const frameNumber = id.replace(/.*-(\d+)$/, '$1');
+  return parseInt(frameNumber, 10);
+};
+
 export const zeroPad = (num: number) => {
   const str = num.toString();
   return str.padStart(3, '0');
 };
 
-export const csvFormat = (frames: Frame[], author: string): string[][] => {
-  if (frames.length === 0) {
-    return [[]];
-  }
-  const labels = frames[0].markers.map((marker) => marker.label);
-  const rowLength = labels.length;
-  const authorArray = new Array(rowLength * 2).fill(author);
-  const markerArray = labels.flatMap((label) => [label, label]);
-  const xyArray = new Array(rowLength).fill(['x', 'y']).flat();
-  const labelData = frames.map((frame) => {
-    const markerPositions = Object.values(frame.markers).flatMap((marker) => [
-      marker.position?.x ? `${Math.round(Number(marker.position?.x))}` : '',
-      marker.position?.y ? `${Math.round(Number(marker.position?.y))}` : '',
-    ]);
-    return [
-      'labeled-data',
-      removeExtension(frame.videoName),
-      `${frame.name}.jpg`,
-      ...markerPositions,
-    ];
-  });
+export const logLocalStorageCapacity = () =>
+  Object.keys(localStorage).reduce((acc, key) => {
+    if (!localStorage.hasOwnProperty(key)) {
+      return acc;
+    }
+    return acc + (localStorage[key].length + key.length) * 2;
+  }, 0);
 
-  return [
-    ['scorer', '', '', ...authorArray],
-    ['bodyparts', '', '', ...markerArray],
-    ['coords', '', '', ...xyArray],
-    ...labelData,
-  ];
+/* 初回と動画に変更があった時に使用 */
+export const createCanvasFromVideo = (videoElement: HTMLVideoElement) => {
+  const canvas = document.createElement('canvas');
+  canvas.width = videoElement.videoWidth;
+  canvas.height = videoElement.videoHeight;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.drawImage(videoElement, 0, 0);
+  }
+
+  return canvas;
 };
 
+export const extractFrame = async (video: HTMLVideoElement, time: number) => {
+  video.currentTime = time;
+  await new Promise((resolve) => {
+    video.addEventListener('seeked', resolve, { once: true });
+  });
+
+  return createCanvasFromVideo(video);
+};
+
+/* CSVで出力する時に使用 */
 export const createVideoElement = (videoUrl: string): HTMLVideoElement => {
   const video = document.createElement('video');
   video.src = videoUrl;
@@ -98,3 +106,82 @@ export const getFrameUrl = (
     };
     video.addEventListener('seeked', handleSeeked);
   });
+
+export const createFrameUrls = async (videoFile: File, frames: Frame[]) => {
+  const url = URL.createObjectURL(videoFile);
+  const newFrameUrls: string[] = [];
+
+  const video = createVideoElement(url);
+  const canvas = document.createElement('canvas');
+
+  const loadedmetadataHandler = async () => {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    for (const frame of frames) {
+      const newFrameUrl = await getFrameUrl(video, canvas, frame);
+      newFrameUrls.push(newFrameUrl);
+    }
+  };
+
+  const cleanup = () => {
+    video.removeEventListener('loadedmetadata', loadedmetadataHandler);
+    document.body.removeChild(video);
+  };
+
+  return new Promise<string[]>((resolve) => {
+    video.load();
+    video.onloadeddata = async () => {
+      await video.play();
+      await loadedmetadataHandler();
+      cleanup();
+      resolve(newFrameUrls);
+    };
+  });
+};
+
+export const csvFormat = (
+  frames: Frame[],
+  frameMarkers: FrameMarkers,
+  author: string,
+): string[][] => {
+  if (frames.length === 0) {
+    return [[]];
+  }
+
+  const videoName = frames[0].videoName;
+  const markers = Object.entries(frameMarkers).filter(
+    ([key]) => videoName === extractFilename(key),
+  );
+
+  if (markers.length === 0) {
+    return [[]];
+  }
+
+  const labels = markers[0][1].map((marker) => marker.label);
+  const rowLength = labels.length;
+  const markerArray = labels.flatMap((label) => [label, label]);
+  const authorArray = Array.from({ length: rowLength * 2 }, () => author);
+  const xyArray = Array.from({ length: rowLength }, () => ['x', 'y']).flat();
+
+  const labelData = markers.map(([key, value]) => {
+    const markerPositions = value.flatMap((marker) => [
+      marker.position?.x ? `${Math.round(Number(marker.position.x))}` : '',
+      marker.position?.y ? `${Math.round(Number(marker.position.y))}` : '',
+    ]);
+
+    return [
+      'labeled-data',
+      removeExtension(videoName),
+      `img${zeroPad(extractFrameNumber(key))}.jpg`,
+      ...markerPositions,
+    ];
+  });
+
+  return [
+    ['scorer', '', '', ...authorArray],
+    ['bodyparts', '', '', ...markerArray],
+    ['coords', '', '', ...xyArray],
+    ...labelData,
+  ];
+};

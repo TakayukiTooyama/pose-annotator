@@ -5,47 +5,44 @@ import type Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { FC } from 'react';
 import { useRef, useState } from 'react';
-import useImage from 'use-image';
 
 import { CanvasOperation } from '@/components/Editor/Canvas/CanvasOperation';
 import CanvasStage from '@/components/Editor/Canvas/CanvasStage';
 import type { Frame, Marker, Position } from '@/types';
 
 type Props = {
-  frames: Frame[];
-  selectFrameIndex: number;
-  selectMarkerIndex: number;
-  frameUrl: string[];
-  labelingMode: string;
+  markers: Marker[];
+  currentMarkerIndex: number;
+  frame: Frame;
+  canvas: HTMLCanvasElement;
   stageWidth: number;
   stageHeight: number;
-  setFrames: (frames: Frame[]) => void;
-  setSelectFrameIndex: (index: number) => void;
-  setSelectMarkerIndex: (index: number) => void;
+  handleLabeling: (
+    e: KonvaEventObject<MouseEvent>,
+    scale: { x: number; y: number },
+    selectMarker: Marker,
+  ) => void;
+  handleUpdateMarkers: (marker: Marker[]) => void;
 };
 
 export const CanvasEditor: FC<Props> = ({
-  frames,
-  frameUrl,
-  selectFrameIndex,
-  selectMarkerIndex,
-  labelingMode,
+  markers,
+  currentMarkerIndex,
+  frame,
+  canvas,
   stageWidth,
   stageHeight,
-  setFrames,
-  setSelectFrameIndex,
-  setSelectMarkerIndex,
+  handleLabeling,
+  handleUpdateMarkers,
 }) => {
-  /* Canvas */
   const stageRef = useRef<Konva.Stage>(null);
   const groupRef = useRef<Konva.Group>(null);
   const imageRef = useRef<Konva.Image>(null);
   const circleRef = useRef<Konva.Circle>(null);
 
   //切り抜いたフレームサイズ
-  const selectFrame = frames[selectFrameIndex];
-  const frameWidth = selectFrame.dimensions.width;
-  const frameHeight = selectFrame.dimensions.height;
+  const frameWidth = frame.dimensions.width;
+  const frameHeight = frame.dimensions.height;
   const frameAspectRatio = frameWidth / frameHeight;
   const isTall = stageWidth / frameAspectRatio > stageHeight;
   // ステージに収めたフレームサイズ
@@ -57,11 +54,6 @@ export const CanvasEditor: FC<Props> = ({
 
   const [isDraggable, setIsDraggable] = useState(true);
   const [mouseDownTime, setMouseDownTime] = useState(0);
-  const [image] = useImage(frameUrl[selectFrameIndex]);
-  // const [history, setHistory] = useState<
-  //   { frameId: string; label: string; position: { x: number; y: number } }[]
-  // >([]);
-  // const [historyStep, setHistoryStep] = useState(0);
   const [, setGroupPosition] = useState({ x: 0, y: 0 });
 
   // キャンバス上の処理
@@ -102,64 +94,6 @@ export const CanvasEditor: FC<Props> = ({
     stageRef.current.position(newPos);
   };
 
-  const handleLabeling = (
-    e: KonvaEventObject<MouseEvent>,
-    scale: { x: number; y: number },
-    selectMarker: Marker,
-  ) => {
-    const lastMarker = selectMarkerIndex === selectFrame.markers.length - 1;
-    const lastFrame = selectFrameIndex === frames.length - 1;
-
-    if (selectFrame.markers.length === 0) {
-      return;
-    }
-
-    /* 現在高さや幅は親のdivのサイズを取得しているので、もしかなりずれてしまうのであれば、
-    e.target.Attrでキャンバス上の画像のwidthやheightが取得できるのでこっちにかえる */
-    const position = e.target.getRelativePointerPosition();
-    const newFrames = frames.map((frame) => {
-      if (frame.name === selectFrame.name) {
-        return {
-          ...frame,
-          markers: frame.markers.map((marker) => ({
-            label: marker.label,
-            position:
-              marker.label === selectMarker.label
-                ? {
-                    x: position.x * scale.x,
-                    y: position.y * scale.y,
-                  }
-                : marker.position,
-          })),
-        };
-      }
-      return frame;
-    });
-    setFrames(newFrames);
-
-    if (lastMarker && lastFrame) {
-      setSelectMarkerIndex(0);
-      setSelectFrameIndex(0);
-    }
-    if (labelingMode === 'allLabeling') {
-      if (!lastMarker) {
-        setSelectMarkerIndex(selectMarkerIndex + 1);
-      }
-      if (lastMarker && !lastFrame) {
-        setSelectFrameIndex(selectFrameIndex + 1);
-        setSelectMarkerIndex(0);
-      }
-    } else {
-      if (!lastFrame) {
-        setSelectFrameIndex(selectFrameIndex + 1);
-      }
-      if (lastFrame && !lastMarker) {
-        setSelectFrameIndex(0);
-        setSelectMarkerIndex(selectMarkerIndex + 1);
-      }
-    }
-  };
-
   const handleMouseDownImage = () => {
     setMouseDownTime(Date.now());
   };
@@ -173,7 +107,7 @@ export const CanvasEditor: FC<Props> = ({
           x: positionXScale,
           y: positionYScale,
         },
-        selectFrame.markers[selectMarkerIndex],
+        markers[currentMarkerIndex],
       );
     }
   };
@@ -200,20 +134,11 @@ export const CanvasEditor: FC<Props> = ({
       x: Math.round(e.target.x() * positionXScale),
       y: Math.round(e.target.y() * positionYScale),
     };
-    const newMarkers: Marker[] = selectFrame.markers.map((marker) => ({
+    const newMarkers: Marker[] = markers.map((marker) => ({
       ...marker,
       position: marker.label === selectMarker.label ? newPosition : marker.position,
     }));
-    const newFrames = frames.map((frame) => {
-      if (frame.name === selectFrame.name) {
-        return {
-          ...frame,
-          markers: newMarkers,
-        };
-      }
-      return frame;
-    });
-    setFrames(newFrames);
+    handleUpdateMarkers(newMarkers);
   };
 
   //　キャンバス外の処理
@@ -234,8 +159,8 @@ export const CanvasEditor: FC<Props> = ({
         <CanvasStage
           stageWidth={stageWidth}
           stageHeight={stageHeight}
-          frame={selectFrame}
-          image={image}
+          markers={markers}
+          image={canvas as any}
           isDraggable={isDraggable}
           stageRef={stageRef}
           groupRef={groupRef}

@@ -1,7 +1,7 @@
 import { AlphaSlider, Slider, Stack, Text } from '@mantine/core';
-import { useClickOutside, useDisclosure } from '@mantine/hooks';
-import type { FC, KeyboardEvent, SetStateAction } from 'react';
-import { useCallback, useState } from 'react';
+import { useDisclosure } from '@mantine/hooks';
+import type { FC } from 'react';
+import { useCallback } from 'react';
 
 import {
   MarkerCounter,
@@ -9,47 +9,70 @@ import {
   MarkerList,
   MarkerOperation,
 } from '@/components/Editor/Marker';
-import { usePersistedMarkerStore } from '@/store';
-import type { Frame, Marker, MarkerOption } from '@/types';
-import { generateNewColor } from '@/utils';
+import { useMarkerSetting } from '@/hooks/useMarkerSetting';
+import type { Marker } from '@/types';
 
 type Props = {
   labelingMode: string;
   viewMode: string;
-  frames: Frame[];
-  selectMarkerIndex: number;
+  markers: Marker[];
+  currentMarkerIndex: number;
   toggleViewMode: () => void;
   toggleLabelingMode: () => void;
-  setFrames: (frames: Frame[]) => void;
-  setSelectMarkerIndex: (index: number) => void;
-  updateVideoFrames: () => void;
+  handleMoveMarkerIndex: (index: number) => void;
+  handleUpdateMarkers: (newMarkers: Marker[]) => void;
 };
 
 export const MarkerEditor: FC<Props> = ({
   labelingMode,
   viewMode,
-  frames,
-  selectMarkerIndex,
+  markers,
+  currentMarkerIndex,
   toggleViewMode,
   toggleLabelingMode,
-  setFrames,
-  setSelectMarkerIndex,
-  updateVideoFrames,
+  handleUpdateMarkers,
+  handleMoveMarkerIndex,
 }) => {
   const [showModal, showModalHandler] = useDisclosure(false);
-  const [showColorPicker, showColorPickerHandler] = useDisclosure(false);
 
-  const { markers, setMarkers } = usePersistedMarkerStore();
-  const [selectMarker, setSelectMarker] = useState<MarkerOption | null>(null);
-  const [inputLabel, setInputLabel] = useState('');
-  const [newInputLabel, setNewInputLabel] = useState('');
+  const {
+    markerSetting,
+    selectedMarker,
+    editingLabel,
+    newLabel,
+    isEdit,
+    showColorPicker,
+    handleUpdateMarkerOptions,
+    handleChangeColorAlpha,
+    handleChangeRadius,
+    handleCreateMarkerOption,
+    handleDeleteMarkerOption,
+    handleUpdateMarkerColor,
+    handleChangeNewLabel,
+    handleShowEditingLabelInput,
+    handleChangeEditingLabel,
+    handleUpdateEditingLabel,
+    handleEnterKeyPress,
+    handleToggleColorPicker,
+    handleDragEnd,
+  } = useMarkerSetting();
 
   const handleCloseModal = () => {
-    handleSaveFrameMarkers();
+    const newMarkerOptions = markerSetting.options.map((marker, index) => ({
+      ...marker,
+      id: `${index}`,
+    }));
+    const newMarkers: Marker[] = newMarkerOptions.map((marker) => {
+      const existingPosition = markers[currentMarkerIndex]?.position;
+      return { ...marker, position: existingPosition || null };
+    });
+    handleUpdateMarkerOptions(newMarkerOptions);
+    handleUpdateMarkers(newMarkers);
     showModalHandler.close();
   };
+
   const handleOpenModal = () => {
-    updateVideoFrames();
+    // updateVideoFrames();
     showModalHandler.open();
   };
 
@@ -57,153 +80,17 @@ export const MarkerEditor: FC<Props> = ({
     toggleViewMode();
   };
 
+  const handleChangeRadio = useCallback(
+    (value: string) => {
+      const selectedMarkerIndex = markers.findIndex((marker) => marker.label === value);
+      handleMoveMarkerIndex(selectedMarkerIndex);
+    },
+    [markers, handleMoveMarkerIndex],
+  );
+
   const handleToggleLabelingMode = () => {
     toggleLabelingMode();
   };
-
-  const handleShowColorPicker = useCallback((selectMarker: MarkerOption) => {
-    setSelectMarker(selectMarker);
-    setInputLabel(selectMarker.label);
-    showColorPickerHandler.open();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleHideColorPicker = useCallback(() => {
-    setSelectMarker(null);
-    setInputLabel('');
-    showColorPickerHandler.close();
-  }, [showColorPickerHandler]);
-
-  const handleChangeColor = useCallback(
-    (color: string, selectMarker: MarkerOption) => {
-      const newMarkerOptions: MarkerOption[] = markers.map((marker) => ({
-        ...marker,
-        color: marker.label === selectMarker.label ? color : marker.color,
-      }));
-      setMarkers(newMarkerOptions);
-    },
-    [markers, setMarkers],
-  );
-
-  const handleCreateMarker = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>, inputLabel: string) => {
-      const newMarkerOption: MarkerOption = {
-        id: '0',
-        label: inputLabel,
-        color: generateNewColor(),
-      };
-      if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
-        e.preventDefault();
-        setMarkers([
-          newMarkerOption,
-          ...markers.map((marker, index) => ({
-            ...marker,
-            id: `${index + 1}`,
-          })),
-        ]);
-        setNewInputLabel('');
-      }
-    },
-    [markers, setMarkers],
-  );
-
-  const handleChangeEdit = useCallback((selectMarker: MarkerOption) => {
-    setSelectMarker(selectMarker);
-    setInputLabel(selectMarker.label);
-  }, []);
-
-  const handleEnglishOnlyInput = (
-    e: React.FormEvent<HTMLInputElement>,
-    setInputValue: (value: SetStateAction<string>) => void,
-  ) => {
-    const nonEnglishPattern = /[^a-zA-Z\s]/g;
-    const inputLabel = e.currentTarget.value;
-    if (nonEnglishPattern.test(inputLabel)) {
-      const updatedValue = inputLabel.replace(nonEnglishPattern, '');
-      setInputValue(updatedValue);
-    } else {
-      setInputValue(inputLabel);
-    }
-  };
-
-  const handleCreateLabel = useCallback((e: React.FormEvent<HTMLInputElement>) => {
-    handleEnglishOnlyInput(e, setNewInputLabel);
-  }, []);
-
-  const handleUpdateLabel = useCallback((e: React.FormEvent<HTMLInputElement>) => {
-    handleEnglishOnlyInput(e, setInputLabel);
-  }, []);
-
-  const handleDeleteMarker = useCallback(
-    (selectMarker: MarkerOption) => {
-      const newMarkers = markers.filter((marker) => marker.label !== selectMarker.label);
-      setMarkers(newMarkers);
-    },
-    [markers, setMarkers],
-  );
-
-  const handleBlurSaveLabel = useCallback(
-    (selectMarker: MarkerOption) => {
-      const newMarkers: MarkerOption[] = markers.map((marker) => ({
-        ...marker,
-        label:
-          marker.label === selectMarker.label && marker.label !== '' ? inputLabel : marker.label,
-      }));
-      setMarkers(newMarkers);
-      setSelectMarker(null);
-      setInputLabel('');
-    },
-    [inputLabel, markers, setMarkers],
-  );
-
-  const handleKeyDownSaveLabel = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>, selectMarker: MarkerOption) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleBlurSaveLabel(selectMarker);
-      }
-    },
-    [handleBlurSaveLabel],
-  );
-
-  const handleSaveFrameMarkers = useCallback(() => {
-    if (frames.length === 0) {
-      return;
-    }
-
-    const newFrames: Frame[] = frames.map((frame) => {
-      const newMarkers: Marker[] = markers.map((marker) => {
-        const existingPosition = frame.markers[selectMarkerIndex]?.position;
-        return { label: marker.label, position: existingPosition || null };
-      });
-
-      return {
-        ...frame,
-        markers: newMarkers,
-      };
-    });
-
-    setFrames(newFrames);
-  }, [frames, markers, selectMarkerIndex, setFrames]);
-
-  const handleChangeRadio = useCallback(
-    (value: string) => {
-      const selectMarkerIndex = markers.findIndex((marker) => marker.label === value);
-      setSelectMarkerIndex(selectMarkerIndex);
-    },
-    [markers, setSelectMarkerIndex],
-  );
-
-  const { markerSetting, setMarkerSetting } = usePersistedMarkerStore();
-
-  const handleChangeColorAlpha = useCallback(
-    (value: number) => {
-      setMarkerSetting({ ...markerSetting, opacity: value });
-    },
-    [markerSetting, setMarkerSetting],
-  );
-
-  const colorPickerRef = useClickOutside(handleHideColorPicker);
 
   return (
     <Stack className='w-32 p-2'>
@@ -215,24 +102,24 @@ export const MarkerEditor: FC<Props> = ({
         onOpenModal={handleOpenModal}
       />
       <MarkerEditModal
-        inputLabel={inputLabel}
-        newInputLabel={newInputLabel}
-        setMarkers={setMarkers}
+        isEdit={isEdit}
+        editingLabel={editingLabel}
+        newLabel={newLabel}
         showModal={showModal}
-        markers={markers}
-        selectMarker={selectMarker}
+        markerOptions={markerSetting.options}
+        selectedMarker={selectedMarker}
         showColorPicker={showColorPicker}
-        colorPickerRef={colorPickerRef}
         onCloseModal={handleCloseModal}
-        onCreateMarker={handleCreateMarker}
-        onDeleteMarker={handleDeleteMarker}
-        onShowColorPicker={handleShowColorPicker}
-        onChangeColor={handleChangeColor}
-        onCreateLabel={handleCreateLabel}
-        onUpdateLabel={handleUpdateLabel}
-        onBlurSaveLabel={handleBlurSaveLabel}
-        onKeyDownSaveLabel={handleKeyDownSaveLabel}
-        onChangeEdit={handleChangeEdit}
+        onCreateMarkerOption={handleCreateMarkerOption}
+        onDeleteMarkerOption={handleDeleteMarkerOption}
+        onToggleColorPicker={handleToggleColorPicker}
+        onUpdateMarkerColor={handleUpdateMarkerColor}
+        onChangeNewLabel={handleChangeNewLabel}
+        onChangeEditingLabel={handleChangeEditingLabel}
+        onUpdateEditingLabel={handleUpdateEditingLabel}
+        onEnterKeyPress={handleEnterKeyPress}
+        onShowEditingLabelInput={handleShowEditingLabelInput}
+        onDragEnd={handleDragEnd}
       />
       <Stack className='h-32'>
         <div>
@@ -245,7 +132,7 @@ export const MarkerEditor: FC<Props> = ({
             min={0}
             max={5}
             value={markerSetting.radius}
-            onChange={(value) => setMarkerSetting({ ...markerSetting, radius: value })}
+            onChange={handleChangeRadius}
             marks={[
               { value: 0, label: '0' },
               { value: 1, label: '1' },
@@ -268,13 +155,12 @@ export const MarkerEditor: FC<Props> = ({
           />
         </div>
       </Stack>
-
       <MarkerList
-        markers={markers}
-        selectMarkerIndex={selectMarkerIndex}
+        markerOptions={markerSetting.options}
+        currentMarkerIndex={currentMarkerIndex}
         onChangeRadio={handleChangeRadio}
       />
-      <MarkerCounter markers={markers} />
+      <MarkerCounter markerOptions={markerSetting.options} />
     </Stack>
   );
 };

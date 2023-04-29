@@ -3,9 +3,9 @@ import type { FC } from 'react';
 import type { MarkerOption } from '@/types';
 
 type Props = {
-  markers: MarkerOption[];
+  markerOptions: MarkerOption[];
 };
 
-export const MarkerCounter: FC<Props> = ({ markers }) => (
-  <div className='h-6'>/{markers.length}</div>
+export const MarkerCounter: FC<Props> = ({ markerOptions }) => (
+  <div className='h-6'>/{markerOptions.length}</div>
 );

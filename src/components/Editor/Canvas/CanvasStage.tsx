@@ -7,8 +7,8 @@ import dynamic from 'next/dynamic';
 import type { FC, MutableRefObject, RefObject } from 'react';
 import { Circle, Group, Image, Layer, Stage } from 'react-konva';
 
-import { usePersistedMarkerStore } from '@/store';
-import type { Frame, Marker } from '@/types';
+import { useMarkerSetting } from '@/hooks/useMarkerSetting';
+import type { Marker } from '@/types';
 import { getFillColor } from '@/utils';
 
 const StickPicture = dynamic(() => import('@/components/Editor/Canvas/StickPicture'), {
@@ -18,7 +18,7 @@ const StickPicture = dynamic(() => import('@/components/Editor/Canvas/StickPictu
 type Props = {
   stageWidth: number;
   stageHeight: number;
-  frame: Frame;
+  markers: Marker[];
   image: HTMLImageElement | undefined;
   isDraggable: boolean;
   stageRef: MutableRefObject<Konva.Stage | null>;
@@ -41,7 +41,7 @@ type Props = {
 const CanvasStage: FC<Props> = ({
   stageWidth,
   stageHeight,
-  frame,
+  markers,
   image,
   isDraggable,
   stageRef,
@@ -60,7 +60,7 @@ const CanvasStage: FC<Props> = ({
   onDragEndCircle,
   onDragEndGroup,
 }) => {
-  const { markers, markerSetting } = usePersistedMarkerStore();
+  const { markerSetting } = useMarkerSetting();
 
   return (
     <Stage
@@ -91,14 +91,14 @@ const CanvasStage: FC<Props> = ({
             onMouseDown={onMouseDownImage}
             alt=''
           />
-          {frame.markers.length > 0 ? (
+          {markers.length > 0 ? (
             <>
               <StickPicture
-                markers={frame.markers}
+                markers={markers}
                 positionXScale={positionXScale}
                 positionYScale={positionYScale}
               />
-              {frame.markers.map((marker) => {
+              {markers.map((marker) => {
                 if (!marker.position?.x || !marker.position.y) {
                   return;
                 }
@@ -110,7 +110,7 @@ const CanvasStage: FC<Props> = ({
                     x={marker.position.x / positionXScale}
                     y={marker.position.y / positionYScale}
                     radius={markerSetting.radius}
-                    fill={getFillColor(marker.label, markers)}
+                    fill={getFillColor(marker.label, markerSetting.options)}
                     opacity={markerSetting.opacity}
                     draggable
                     onMouseEnter={onHoverCursorCircle}

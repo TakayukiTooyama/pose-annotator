@@ -8,34 +8,36 @@ import { IconButton } from '@/components/Common';
 import type { MarkerOption } from '@/types';
 
 type Props = {
+  isEdit: boolean;
   marker: MarkerOption;
-  inputLabel: string;
+  editingLabel: string;
   showColorPicker: boolean;
-  selectMarker: MarkerOption | null;
+  selectedMarker: MarkerOption | null;
   colorPickerRef: React.RefObject<HTMLDivElement>;
-  onDeleteMarker: (marker: MarkerOption) => void;
-  onBlurSaveLabel: (marker: MarkerOption) => void;
-  onKeyDownSaveLabel: (e: KeyboardEvent<HTMLInputElement>, marker: MarkerOption) => void;
-  onUpdateLabel: (e: React.FormEvent<HTMLInputElement>) => void;
-  onShowColorPicker: (marker: MarkerOption) => void;
-  onChangeColor: (value: string, marker: MarkerOption) => void;
-  onChangeEdit: (selectMarker: MarkerOption) => void;
+  onDeleteMarkerOption: (label: string) => void;
+  onUpdateEditingLabel: (marker: MarkerOption) => void;
+  onEnterKeyPress: (e: KeyboardEvent<HTMLInputElement>, marker: MarkerOption) => void;
+  onChangeEditingLabel: (e: React.FormEvent<HTMLInputElement>) => void;
+  onToggleColorPicker: (selectedMarker: MarkerOption | null) => void;
+  onUpdateMarkerColor: (value: string, marker: MarkerOption) => void;
+  onShowEditingLabelInput: (selectedMarker: MarkerOption) => void;
 };
 
 export const MarkerEditModalListItem: FC<Props> = memo(
   ({
+    isEdit,
     marker,
-    inputLabel,
+    editingLabel,
     showColorPicker,
-    selectMarker,
+    selectedMarker,
     colorPickerRef,
-    onDeleteMarker,
-    onChangeColor,
-    onBlurSaveLabel,
-    onKeyDownSaveLabel,
-    onUpdateLabel,
-    onShowColorPicker,
-    onChangeEdit,
+    onDeleteMarkerOption,
+    onUpdateEditingLabel,
+    onEnterKeyPress,
+    onChangeEditingLabel,
+    onToggleColorPicker,
+    onUpdateMarkerColor,
+    onShowEditingLabelInput,
   }) => {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
       id: marker.id,
@@ -56,17 +58,17 @@ export const MarkerEditModalListItem: FC<Props> = memo(
             component='button'
             color={marker.color}
             className='cursor-pointer'
-            onClick={() => onShowColorPicker(marker)}
+            onClick={() => onToggleColorPicker(marker)}
           />
           <Flex justify='space-between' align='center' className='flex-1'>
-            {marker === selectMarker ? (
+            {isEdit && marker === selectedMarker ? (
               <TextInput
                 className='flex-1'
                 variant='unstyled'
-                value={inputLabel}
-                onChange={onUpdateLabel}
-                onBlur={() => onBlurSaveLabel(marker)}
-                onKeyDown={(e) => onKeyDownSaveLabel(e, marker)}
+                value={editingLabel}
+                onChange={onChangeEditingLabel}
+                onBlur={() => onUpdateEditingLabel(marker)}
+                onKeyDown={(e) => onEnterKeyPress(e, marker)}
               />
             ) : (
               <TextInput
@@ -74,21 +76,21 @@ export const MarkerEditModalListItem: FC<Props> = memo(
                 className='flex-1'
                 variant='unstyled'
                 value={marker.label}
-                onClick={() => onChangeEdit(marker)}
+                onClick={() => onShowEditingLabelInput(marker)}
               />
             )}
             <IconButton
               variant='light'
               color='red'
               icon={TbSquareMinus}
-              onClick={() => onDeleteMarker(marker)}
+              onClick={() => onDeleteMarkerOption(marker.label)}
             />
           </Flex>
         </Flex>
-        {showColorPicker && marker === selectMarker ? (
+        {showColorPicker && marker === selectedMarker ? (
           <ColorPicker
             value={marker.color}
-            onChangeEnd={(color) => onChangeColor(color, marker)}
+            onChangeEnd={(color) => onUpdateMarkerColor(color, marker)}
             className='absolute left-0 z-10'
             ref={colorPickerRef}
           />
