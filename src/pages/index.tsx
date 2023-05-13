@@ -1,67 +1,80 @@
-import { AppShell, Modal, Progress } from '@mantine/core';
+import { AppShell, Box } from '@mantine/core';
+import { useElementSize, useToggle } from '@mantine/hooks';
 import dynamic from 'next/dynamic';
 import type { FC } from 'react';
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
 import { ContinueModal } from '@/components/Common';
-import { FrameInfo, FrameOperation } from '@/components/Gallery';
-import { FrameList2 } from '@/components/Gallery/FrameList2';
+import { FrameList, FrameOperation } from '@/components/Gallery';
 import { Header } from '@/components/Header';
-import { SidebarDrawer } from '@/components/Sidebar';
-import { useDownloadCSV } from '@/hooks/useDownloadCSV';
-import { useFrameMarkers } from '@/hooks/useFrameMarkers';
-import { useModal } from '@/hooks/useModal';
-import { useVideoFrames } from '@/hooks/useVideoFrames';
-import { useVideos } from '@/hooks/useVideos';
+import { MarkerEditor } from '@/components/Marker';
+import { Player } from '@/components/Player';
+import { Sidebar } from '@/components/Sidebar';
+import { useBlockBrowserNavigation, useMultiToggle } from '@/hooks';
+import { useCanvas, useFrame, useMarker, useVideo } from '@/store';
 
-const Editor = dynamic(() => import('@/components/Editor/Editor'), {
+const AnnotationCanvas = dynamic(() => import('@/components/Canvas/AnnotationCanvas'), {
   ssr: false,
 });
 
 const EditorPage: FC = () => {
-  const { openModal, closeModal, isModalOpen } = useModal();
+  useBlockBrowserNavigation();
 
-  const { videos, selectedVideoUrl, currentVideoIndex, handleAddVideo, handleSelectedVideo } =
-    useVideos();
+  const [viewMode, toggleViewMode] = useToggle(['frameExtraction', 'annotation']);
+  const [labelingMode, toggleLabelingMode] = useToggle(['allLabeling', 'oneLabeling']);
+  const stageElement = useElementSize();
+  const { open, close, isOpen } = useMultiToggle();
 
+  const { videos, selectedVideo, selectedVideoUrl } = useVideo();
   const {
-    viewportRef,
-    videoRef,
-    frames,
-    canvases,
     videoFrames,
     currentFrameIndex,
-    removeVideoFrames,
-    handleAddVideoFrames,
-    handleDeleteVideoFrames,
-    handleSelectFrameIndex,
-    handleMoveFrameIndex,
-  } = useVideoFrames(videos[currentVideoIndex]);
+    frames,
+    selectedFrame,
+    addFrame,
+    moveFrameIndex,
+    updateVideoFrames,
+  } = useFrame();
+  const { frameMarkers, createFrameMarkers, updateFrameMarkers } = useMarker();
+  const { canvases, selectedCanvas, addCanvas } = useCanvas();
 
-  const { frameMarkers, removeFrameMarkers } = useFrameMarkers(frames[currentFrameIndex]);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const stageSize = { width: stageElement.width, height: stageElement.height };
 
-  const { progress, isDownload, handleClickDownloadDataUrls } = useDownloadCSV(
-    videos,
-    videoFrames,
-    frameMarkers,
-    'TakayukiTooyama',
+  const handleClickCapture = useCallback(
+    (video: HTMLVideoElement | null) => {
+      if (!video || !frames) {
+        return;
+      }
+
+      const currentFrameNumber = Number(Math.round(video.currentTime / 0.03).toString());
+      const existingFrameIndex = frames.findIndex(
+        (frame) => frame.name === `${currentFrameNumber}`,
+      );
+
+      if (existingFrameIndex !== -1) {
+        return;
+      }
+
+      const nextFrameIndex = frames.findIndex((frame) => Number(frame.name) > currentFrameNumber);
+      addFrame(video, nextFrameIndex);
+      addCanvas(video, nextFrameIndex);
+      createFrameMarkers(`${selectedVideo?.name}-${currentFrameNumber}`);
+
+      if (nextFrameIndex === -1) {
+        moveFrameIndex(frames.length);
+      } else {
+        moveFrameIndex(nextFrameIndex);
+      }
+
+      video.currentTime += 0.03;
+    },
+    [frames, selectedVideo, addCanvas, addFrame, createFrameMarkers, moveFrameIndex],
   );
-
-  const handleDeleteLocalStorage = useCallback(() => {
-    removeVideoFrames();
-    removeFrameMarkers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <AppShell
-      header={
-        <Header
-          onClick={() => openModal('sidebar')}
-          frames={frames}
-          onClickDownloadDataUrls={handleClickDownloadDataUrls}
-        />
-      }
+      header={<Header onOpenSidebar={() => open('sidebar')} />}
       padding='md'
       sx={(theme) => ({
         main: {
@@ -71,67 +84,70 @@ const EditorPage: FC = () => {
           paddingLeft: 0,
           paddingRight: 0,
           paddingBottom: 0,
+          userSelect: 'none',
         },
       })}
     >
-      <SidebarDrawer
-        showDrawer={isModalOpen('sidebar')}
-        videoRef={videoRef}
-        videos={videos}
-        currentVideoIndex={currentVideoIndex}
-        onClose={() => closeModal('sidebar')}
-        onSelectVideo={handleSelectedVideo}
-        onAddVideo={handleAddVideo}
+      <Sidebar
+        showDrawer={isOpen('sidebar')}
+        onCloseSidebar={() => close('sidebar')}
+        toggleViewMode={toggleViewMode}
       />
       <div className='flex h-full flex-col'>
-        <Editor
-          videoRef={videoRef}
-          videoUrl={selectedVideoUrl}
-          videos={videos}
-          currentVideoIndex={currentVideoIndex}
-          canvas={canvases[currentFrameIndex]}
-          frames={frames}
-          currentFrameIndex={currentFrameIndex}
-          handleMoveFrameIndex={handleMoveFrameIndex}
-          handleAddVideoFrames={handleAddVideoFrames}
-        />
-
-        <div className='flex h-44'>
-          {frames.length !== 0 && canvases.length !== 0 ? (
-            <>
-              <FrameInfo selectFrame={frames[currentFrameIndex]} />
-              <div className='flex-1 overflow-hidden'>
-                <FrameList2
-                  viewportRef={viewportRef}
-                  currentFrameIndex={currentFrameIndex}
-                  canvases={canvases}
-                  onSelectFrame={handleSelectFrameIndex}
+        <div className='flex flex-1'>
+          <MarkerEditor
+            labelingMode={labelingMode}
+            viewMode={viewMode}
+            toggleViewMode={toggleViewMode}
+            toggleLabelingMode={toggleLabelingMode}
+          />
+          <div className='flex flex-1 flex-col overflow-hidden'>
+            <Box
+              sx={(theme) => ({
+                backgroundColor:
+                  theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[1],
+                position: 'relative',
+                flexGrow: 1,
+                overflow: 'hidden',
+              })}
+              ref={stageElement.ref}
+            >
+              {viewMode === 'frameExtraction' && selectedVideoUrl ? (
+                <Player
+                  videoUrl={selectedVideoUrl}
+                  videoRef={videoRef}
+                  stageSize={stageSize}
+                  onClickCapture={handleClickCapture}
                 />
-                <FrameOperation
-                  frames={frames}
-                  currentFrameIndex={currentFrameIndex}
-                  onMoveFrameIndex={handleMoveFrameIndex}
-                  onSelectFrameIndex={handleSelectFrameIndex}
-                  onDeleteFrame={handleDeleteVideoFrames}
+              ) : null}
+              {viewMode === 'annotation' && !!selectedFrame && !!selectedCanvas ? (
+                <AnnotationCanvas
+                  labelingMode={labelingMode}
+                  stageSize={stageSize}
+                  selectedFrame={selectedFrame}
+                  selectedCanvas={canvases[currentFrameIndex]}
                 />
-              </div>
-            </>
-          ) : null}
+              ) : null}
+            </Box>
+            <div className='h-44'>
+              {frames && frames.length !== 0 && frames.length === canvases.length ? (
+                <>
+                  <FrameList frames={frames} canvases={canvases} />
+                  <FrameOperation frames={frames} />
+                </>
+              ) : null}
+            </div>
+          </div>
         </div>
       </div>
-      {(videos.length === 0 && videoFrames) || (isModalOpen('continue') && videoFrames) ? (
+      {videoFrames && frameMarkers ? (
         <ContinueModal
           videos={videos}
           videoFrames={videoFrames}
-          showModal={isModalOpen('continue')}
-          onAddVideo={handleAddVideo}
-          onDeleteVideoFrames={handleDeleteLocalStorage}
+          frameMarkers={frameMarkers}
+          updateVideoFrames={updateVideoFrames}
+          updateFrameMarkers={updateFrameMarkers}
         />
-      ) : null}
-      {isDownload ? (
-        <Modal opened={isDownload} onClose={() => closeModal('download')} withCloseButton={false}>
-          <Progress value={progress} animate />
-        </Modal>
       ) : null}
     </AppShell>
   );

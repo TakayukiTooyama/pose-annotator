@@ -1,7 +1,5 @@
 export { SearchVideo } from './SearchVideo';
-export { SidebarDrawer } from './SidebarDrawer';
-export { SidebarMinimal } from './SidebarMinimal';
-export { SidebarButton } from './SidebarMinimalButton';
+export { Sidebar } from './Sidebar';
 export { VideoAddButton } from './VideoAddButton';
-export { VideoAddIconButton } from './VideoAddIconButton';
+export { VideoList } from './VideoList';
 export { VideoListItem } from './VideoListItem';

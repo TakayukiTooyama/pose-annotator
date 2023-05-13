@@ -7,10 +7,10 @@ import type { Video } from '@/types';
 type Props = {
   video: Video;
   active: boolean;
-  onSelectVideo: (video: Video) => void;
+  onSelectVideo: () => void;
 };
 
-export const VideoListItem: FC<Props> = ({ video, onSelectVideo }) => (
+export const VideoListItem: FC<Props> = ({ active, video, onSelectVideo }) => (
   <UnstyledButton
     sx={(theme) => ({
       display: 'flex',
@@ -20,18 +20,18 @@ export const VideoListItem: FC<Props> = ({ video, onSelectVideo }) => (
       borderRadius: theme.radius.sm,
       fontWeight: 500,
       color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.gray[7],
-      // backgroundColor: active
-      //   ? theme.colorScheme === 'dark'
-      //     ? theme.colors.dark[4]
-      //     : theme.colors.gray[2]
-      //   : 'transparent',
+      backgroundColor: active
+        ? theme.colorScheme === 'dark'
+          ? theme.colors.dark[6]
+          : theme.colors.gray[0]
+        : 'transparent',
 
       '&:hover': {
         backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
         color: theme.colorScheme === 'dark' ? theme.white : theme.black,
       },
     })}
-    onClick={() => onSelectVideo(video)}
+    onClick={onSelectVideo}
   >
     <Group>
       <TbMovie size={24} color='gray' />

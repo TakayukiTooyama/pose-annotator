@@ -28,6 +28,7 @@
     "@mantine/next": "^6.0.6",
     "@pixi/react": "^7.0.3",
     "canvas": "^2.11.2",
+    "chroma-js": "^2.4.2",
     "jszip": "^3.10.1",
     "konva": "^8.4.3",
     "next": "^13.3.0",
@@ -36,12 +37,16 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.8.0",
+    "react-intersection-observer": "^9.4.3",
     "react-konva": "^18.2.5",
     "remeda": "^1.12.0",
-    "uuid": "^9.0.0"
+    "use-image": "^1.1.0",
+    "uuid": "^9.0.0",
+    "zustand": "^4.3.8"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.9",
+    "@types/chroma-js": "^2.4.0",
     "@types/node": "^18.15.11",
     "@types/papaparse": "^5.3.7",
     "@types/react": "^18.0.33",

@@ -1,3 +1,3 @@
-export { FrameInfo } from './FrameInfo';
+export { FrameCounter } from './FrameCounter';
 export { FrameList } from './FrameList';
 export { FrameOperation } from './FrameOperation';

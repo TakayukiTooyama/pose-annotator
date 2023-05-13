@@ -1,48 +1,49 @@
-import { Group, Text } from '@mantine/core';
+import { Group } from '@mantine/core';
 import type { FC } from 'react';
-import { TbArrowLeft, TbArrowRight, TbCurrentLocation, TbTrash } from 'react-icons/tb';
+import {
+  TbChevronLeft,
+  TbChevronRight,
+  TbChevronsLeft,
+  TbChevronsRight,
+  TbTrash,
+} from 'react-icons/tb';
 
-import { IconButton } from '@/components/Common';
+import { IconButton, Text } from '@/components/Common';
+import { FrameCounter } from '@/components/Gallery';
+import { useFrame } from '@/store';
 import type { Frame } from '@/types';
 
 type Props = {
   frames: Frame[];
-  currentFrameIndex: number;
-  onMoveFrameIndex: (index: number, isScroll?: boolean) => void;
-  onSelectFrameIndex: (index: number, isScroll?: boolean) => void;
-  onDeleteFrame: (currentFrameIndex: number) => void;
 };
 
-export const FrameOperation: FC<Props> = ({
-  frames,
-  currentFrameIndex,
-  onMoveFrameIndex,
-  onSelectFrameIndex,
-  onDeleteFrame,
-}) => (
-  <div className='flex h-12 justify-between px-4 py-2'>
-    <Group>
+export const FrameOperation: FC<Props> = ({ frames }) => {
+  const { currentFrameIndex, moveFrameIndex, deleteFrame } = useFrame();
+
+  return (
+    <div className='flex h-12 items-center justify-between px-4 py-2'>
+      <div className='w-[34px] opacity-0' />
+      <Group className='flex items-center'>
+        <div className='flex space-x-1'>
+          <IconButton icon={TbChevronsLeft} onClick={() => moveFrameIndex(0)} />
+          <IconButton icon={TbChevronLeft} onClick={() => moveFrameIndex(currentFrameIndex - 1)} />
+        </div>
+        <div className='flex items-center'>
+          <FrameCounter />
+          <Text text='/' />
+          <Text text={`${frames.length - 1}`} className='w-10 text-center' />
+        </div>
+        <div className='flex space-x-1'>
+          <IconButton icon={TbChevronRight} onClick={() => moveFrameIndex(currentFrameIndex + 1)} />
+          <IconButton icon={TbChevronsRight} onClick={() => moveFrameIndex(frames.length - 1)} />
+        </div>
+      </Group>
       <IconButton
         icon={TbTrash}
         color='red'
         variant='outline'
-        onClick={() => onDeleteFrame(currentFrameIndex)}
+        onClick={() => deleteFrame(currentFrameIndex)}
       />
-      <IconButton
-        icon={TbCurrentLocation}
-        onClick={() => onSelectFrameIndex(currentFrameIndex, true)}
-      />
-    </Group>
-    <Group>
-      <IconButton
-        icon={TbArrowLeft}
-        onClick={() => onMoveFrameIndex(currentFrameIndex - 1, true)}
-      />
-      <IconButton
-        icon={TbArrowRight}
-        onClick={() => onMoveFrameIndex(currentFrameIndex + 1, true)}
-      />
-    </Group>
-    <Text>{`${currentFrameIndex + 1} / ${frames.length}`}</Text>
-  </div>
-);
+    </div>
+  );
+};

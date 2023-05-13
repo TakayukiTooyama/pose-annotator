@@ -1,4 +1,9 @@
+import chroma from 'chroma-js';
+
 import type { Frame, FrameMarkers, MarkerOption } from '@/types';
+
+export const strictEntries = <T extends Record<string, any>>(object: T): [keyof T, T[keyof T]][] =>
+  Object.entries(object);
 
 export const generateNewColor = () => {
   const hexColorRep = Array.from({ length: 6 }, () => {
@@ -13,6 +18,8 @@ export const getFillColor = (selectLabel: string, markers: MarkerOption[]) =>
   markers.find((marker) => marker.label === selectLabel)?.color || generateNewColor();
 
 export const byteCount = (s: string): number => new Blob([s]).size;
+
+export const brightenColorForDarkMode = (color: string) => chroma(color).brighten(2).hex();
 
 export const formatBytes = (bytes: number, decimals = 0) => {
   if (bytes === 0) {
@@ -50,6 +57,8 @@ export const zeroPad = (num: number) => {
   return str.padStart(3, '0');
 };
 
+export const isIndexValid = (index: number, maxLength: number) => index < 0 || index === maxLength;
+
 export const logLocalStorageCapacity = () =>
   Object.keys(localStorage).reduce((acc, key) => {
     if (!localStorage.hasOwnProperty(key)) {
@@ -76,8 +85,17 @@ export const extractFrame = async (video: HTMLVideoElement, time: number) => {
   await new Promise((resolve) => {
     video.addEventListener('seeked', resolve, { once: true });
   });
-
   return createCanvasFromVideo(video);
+};
+
+export const extractFrames = async (video: HTMLVideoElement, times: number[]) => {
+  const canvases = [];
+  for (const time of times) {
+    const canvas = await extractFrame(video, time);
+    canvases.push(canvas);
+  }
+  video.currentTime = 0;
+  return canvases;
 };
 
 /* CSVで出力する時に使用 */
@@ -140,7 +158,7 @@ export const createFrameUrls = async (videoFile: File, frames: Frame[]) => {
   });
 };
 
-export const csvFormat = (
+export const formatDLC = (
   frames: Frame[],
   frameMarkers: FrameMarkers,
   author: string,

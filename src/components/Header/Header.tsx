@@ -1,26 +1,26 @@
-import { ActionIcon, Flex, Group, Header, Title } from '@mantine/core';
+import { Flex, Group, Header, rem, Title } from '@mantine/core';
 import type { FC } from 'react';
-import { TbFileDownload, TbLayoutSidebar, TbMoonStars, TbSun } from 'react-icons/tb';
+import { TbLayoutSidebar, TbMoonStars, TbSun } from 'react-icons/tb';
 
-import { useDarkMode } from '@/hooks/useDarkMode';
-import type { Frame } from '@/types';
+import { IconButton } from '@/components/Common';
+import { DLCTrainingDataFormatter } from '@/components/Header';
+import { useDarkMode } from '@/hooks';
 
 type Props = {
-  frames: Frame[];
-  onClick: () => void;
-  onClickDownloadDataUrls: () => void;
+  onOpenSidebar: () => void;
 };
 
-export const HeaderContents: FC<Props> = ({ frames, onClick, onClickDownloadDataUrls }) => {
-  const { colorScheme, toggleColorScheme } = useDarkMode(); // カスタムフックを使用
+export const HeaderContents: FC<Props> = ({ onOpenSidebar }) => {
+  const { colorScheme, toggleColorScheme } = useDarkMode();
   const dark = colorScheme === 'dark';
 
   return (
     <Header height={54} p='xs'>
       <Flex justify='space-between' align='center'>
-        <ActionIcon variant='default' size='lg' onClick={onClick}>
-          <TbLayoutSidebar size='1.2rem' />
-        </ActionIcon>
+        <Group w={rem(84)}>
+          <IconButton icon={TbLayoutSidebar} onClick={onOpenSidebar} />
+        </Group>
+
         <Title
           size='h3'
           sx={(theme) => ({
@@ -29,20 +29,10 @@ export const HeaderContents: FC<Props> = ({ frames, onClick, onClickDownloadData
         >
           Pose Annotator
         </Title>
-        <Group>
-          <ActionIcon
-            variant='default'
-            size='lg'
-            disabled={frames.length === 0}
-            onClick={onClickDownloadDataUrls}
-          >
-            {/* <CSVLink data={csvFormat(frames, 'TakayukiTooyama')} filename={'export.csv'}> */}
-            <TbFileDownload size='1.2rem' />
-            {/* </CSVLink> */}
-          </ActionIcon>
-          <ActionIcon variant='default' size='lg' onClick={() => toggleColorScheme()}>
-            {dark ? <TbSun /> : <TbMoonStars />}
-          </ActionIcon>
+
+        <Group w={rem(84)}>
+          <DLCTrainingDataFormatter />
+          <IconButton icon={dark ? TbSun : TbMoonStars} onClick={() => toggleColorScheme()} />
         </Group>
       </Flex>
     </Header>
