@@ -45,10 +45,12 @@ export const useMarkerStore = create<State & Action>()(
               const marker = value.find((marker) => marker.label === option.label);
               return {
                 label: option.label,
-                position: {
-                  x: marker?.position ? marker.position.x : null,
-                  y: marker?.position ? marker.position.y : null,
-                },
+                position: marker?.position
+                  ? {
+                      x: marker.position.x,
+                      y: marker.position.y,
+                    }
+                  : null,
               };
             });
             return { ...acc, [key]: markers };

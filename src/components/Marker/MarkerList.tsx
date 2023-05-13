@@ -7,14 +7,14 @@ import { brightenColorForDarkMode } from '@/utils';
 type Props = {
   markerOptions: MarkerOption[];
   currentMarkerIndex: number;
-  noLabelingList: string[];
+  labeledList: string[];
   moveMarkerIndex: (index: number) => void;
 };
 
 export const MarkerList: FC<Props> = ({
   markerOptions,
   currentMarkerIndex,
-  noLabelingList,
+  labeledList,
   moveMarkerIndex,
 }) => {
   const handleChangeRadio = (value: string) => {
@@ -37,7 +37,7 @@ export const MarkerList: FC<Props> = ({
           color='indigo'
           sx={(theme) => ({
             label: {
-              opacity: noLabelingList.includes(marker.label) ? 0.3 : 1,
+              opacity: labeledList.includes(marker.label) ? 0.3 : 1,
               color:
                 theme.colorScheme === 'dark'
                   ? brightenColorForDarkMode(marker.color)

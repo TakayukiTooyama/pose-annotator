@@ -1,7 +1,7 @@
 import { AlphaSlider, Slider, Stack } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import type { FC } from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { TbAccessible, TbCameraPlus, TbClick, TbEdit, TbViewfinder } from 'react-icons/tb';
 
 import { IconButton, Text } from '@/components/Common';
@@ -21,12 +21,17 @@ export const MarkerEditor: FC<Props> = ({
   toggleViewMode,
   toggleLabelingMode,
 }) => {
+  const markerListViewport = useRef<HTMLDivElement>(null);
+
   const [showModal, showModalHandler] = useDisclosure(false);
-
   const { markers, currentMarkerIndex, moveMarkerIndex } = useMarker();
-
   const { options, radius, opacity, updateRadius, updateOpacity, updateMarkerOptionsId } =
     useMarkerSetting();
+  const { setMarkerListViewport } = useScrollViewport();
+
+  useEffect(() => {
+    setMarkerListViewport(markerListViewport.current);
+  }, [setMarkerListViewport]);
 
   const handleOpenModal = () => {
     showModalHandler.open();
@@ -37,15 +42,10 @@ export const MarkerEditor: FC<Props> = ({
     showModalHandler.close();
   };
 
-  const noLabelingList = markers
-    .filter((marker) => marker.position !== null)
-    .map((marker) => marker.label);
-
-  const markerListViewport = useRef<HTMLDivElement>(null);
-  const { setMarkerListViewport } = useScrollViewport();
-  useEffect(() => {
-    setMarkerListViewport(markerListViewport.current);
-  }, [setMarkerListViewport]);
+  const labeledList = useMemo(
+    () => markers.filter((marker) => marker.position !== null).map((marker) => marker.label),
+    [markers],
+  );
 
   return (
     <>
@@ -72,13 +72,13 @@ export const MarkerEditor: FC<Props> = ({
           <MarkerList
             markerOptions={options || []}
             currentMarkerIndex={currentMarkerIndex}
-            noLabelingList={noLabelingList}
+            labeledList={labeledList}
             moveMarkerIndex={moveMarkerIndex}
           />
         </div>
 
         {/* MarkerCounter */}
-        <Text text={`${noLabelingList.length} / ${options?.length}`} />
+        <Text text={`${labeledList.length} / ${options?.length}`} />
 
         {/* MarkerOptionSlider */}
         <Stack className='h-32'>
