@@ -1,7 +1,7 @@
-import * as R from 'remeda';
 import { v4 as uuid } from 'uuid';
 import { create } from 'zustand';
 
+import { useCalibrationMarkerStore } from '@/store/useCalibrationMarkerStore';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useFrameStore } from '@/store/useFrameStore';
 import { useMarkerStore } from '@/store/useMarkerStore';
@@ -28,24 +28,36 @@ export const useVideoStore = create<State & Action>()((set, get) => ({
   selectedVideoUrl: '',
   currentVideoIndex: 0,
   addVideo: (payload: File[]) => {
-    const newVideos: Video[] = payload.map((file) => ({
-      id: uuid(),
-      name: file.name,
-      file,
-    }));
+    const newVideos = payload
+      .filter(
+        (file) =>
+          !get()
+            .videos.map((video) => video.name)
+            .includes(file.name),
+      )
+      .map((file) => ({
+        id: uuid(),
+        name: file.name,
+        file,
+      }));
+
+    newVideos.forEach(({ name }) =>
+      useCalibrationMarkerStore.getState().createCalibrationMarkers(name),
+    );
+
     if (get().videos.length === 0) {
       useCanvasStore.getState().createCanvases(newVideos[0]);
     }
+
     if (!get().selectedVideoUrl) {
       set(() => ({
         selectedVideoUrl: URL.createObjectURL(newVideos[0].file),
         selectedVideo: newVideos[0],
       }));
     }
-    set((prev) => ({
-      videos: R.uniqBy([...prev.videos, ...newVideos], (video) => video.name),
-    }));
+    set((state) => ({ videos: [...state.videos, ...newVideos] }));
   },
+
   deleteVideo: (index: number) => {
     const selectedVideo = get().videos[index];
     if (!selectedVideo) {
@@ -53,6 +65,7 @@ export const useVideoStore = create<State & Action>()((set, get) => ({
     }
     useFrameStore.getState().deleteVideoFrames(selectedVideo.name);
     useMarkerStore.getState().deleteFrameMarkers(selectedVideo.name);
+    useCalibrationMarkerStore.getState().deleteCalibrationMarkers(selectedVideo.name);
 
     const newVideos = get().videos.filter((video) => video.name !== selectedVideo.name);
     const currentVideoIndex = get().currentVideoIndex;
@@ -76,6 +89,7 @@ export const useVideoStore = create<State & Action>()((set, get) => ({
   deleteAllVideos: () => {
     useFrameStore.getState().deleteAllVideoFrames();
     useMarkerStore.getState().deleteAllFrameMarkers();
+    useCalibrationMarkerStore.getState().deleteAllCalibrationMarkers();
     set(() => ({ videos: [] }));
   },
   selectVideoIndex: (index: number) => {

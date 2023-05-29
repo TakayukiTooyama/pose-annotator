@@ -1,6 +1,6 @@
-import { Flex, Group, Header, rem, Title } from '@mantine/core';
+import { Flex, Group, Header, Title } from '@mantine/core';
 import type { FC } from 'react';
-import { TbLayoutSidebar, TbMoonStars, TbSun } from 'react-icons/tb';
+import { TbMoonStars, TbSun } from 'react-icons/tb';
 
 import { IconButton } from '@/components/Common';
 import { DLCTrainingDataFormatter } from '@/components/Header';
@@ -17,20 +17,18 @@ export const HeaderContents: FC<Props> = ({ onOpenSidebar }) => {
   return (
     <Header height={54} p='xs'>
       <Flex justify='space-between' align='center'>
-        <Group w={rem(84)}>
-          <IconButton icon={TbLayoutSidebar} onClick={onOpenSidebar} />
+        <Group>
+          {/* <IconButton icon={TbLayoutSidebar} onClick={onOpenSidebar} /> */}
+          <Title
+            size='h3'
+            sx={(theme) => ({
+              color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.gray[9],
+            })}
+          >
+            {/* Pose Annotator */}
+          </Title>
         </Group>
-
-        <Title
-          size='h3'
-          sx={(theme) => ({
-            color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.gray[9],
-          })}
-        >
-          Pose Annotator
-        </Title>
-
-        <Group w={rem(84)}>
+        <Group>
           <DLCTrainingDataFormatter />
           <IconButton icon={dark ? TbSun : TbMoonStars} onClick={() => toggleColorScheme()} />
         </Group>

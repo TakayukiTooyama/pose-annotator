@@ -19,9 +19,9 @@ export const useVideoSize = (
     }
 
     const videoAspectRatio = video.videoWidth / video.videoHeight;
-    const isTall = stageWidth / videoAspectRatio > stageHeight - 80;
-    const videoWidth = isTall ? (stageHeight - 80) * videoAspectRatio : stageWidth;
-    const videoHeight = isTall ? stageHeight - 80 : stageWidth / videoAspectRatio;
+    const isTall = stageWidth / videoAspectRatio > stageHeight;
+    const videoWidth = isTall ? stageHeight * videoAspectRatio : stageWidth;
+    const videoHeight = isTall ? stageHeight : stageWidth / videoAspectRatio;
 
     setVideoSize({ width: videoWidth, height: videoHeight });
   }, [stageHeight, stageWidth, videoRef]);

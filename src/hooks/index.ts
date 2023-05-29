@@ -1,5 +1,6 @@
 export { useAnnotation } from './useAnnotation';
 export { useBlockBrowserNavigation } from './useBlockBrowserNavigation';
+export { useCalibration } from './useCalibration';
 export { useCanvasOperation } from './useCanvasOperation';
 export { useCreateMarkerLabel } from './useCreateMarkerLabel';
 export { useDarkMode } from './useDarkMode';

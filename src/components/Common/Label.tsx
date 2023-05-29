@@ -3,16 +3,16 @@ import { Text as MantineText } from '@mantine/core';
 import type { FC } from 'react';
 
 type Props = {
-  text: string;
+  label: string;
 } & TextProps;
 
-export const Text: FC<Props> = ({ text, ...props }) => (
+export const Label: FC<Props> = ({ label, ...props }) => (
   <MantineText
     sx={(theme) => ({
-      color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.gray[7],
+      color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.gray[6],
     })}
     {...props}
   >
-    {text}
+    {label}
   </MantineText>
 );

@@ -1,45 +1,45 @@
-import { AppShell, Box } from '@mantine/core';
-import { useElementSize, useToggle } from '@mantine/hooks';
+import { AppShell, Box, Center, Divider } from '@mantine/core';
+import { useElementSize } from '@mantine/hooks';
 import dynamic from 'next/dynamic';
 import type { FC } from 'react';
 import { useCallback, useRef } from 'react';
+import { Panel, PanelGroup } from 'react-resizable-panels';
 
-import { ContinueModal } from '@/components/Common';
+import { ContinueModal, PanelResizeHandler, Select } from '@/components/Common';
+import { SideAreaOperation } from '@/components/Common/SideAreaOperation';
 import { FrameList, FrameOperation } from '@/components/Gallery';
-import { Header } from '@/components/Header';
-import { MarkerEditor } from '@/components/Marker';
-import { Player } from '@/components/Player';
-import { Sidebar } from '@/components/Sidebar';
+import { AnnotationMarkerEditor, CalibrationMarkerEditor } from '@/components/Marker';
+import { Player, PlayerEditor } from '@/components/Player';
 import { useBlockBrowserNavigation, useMultiToggle } from '@/hooks';
-import { useCanvas, useFrame, useMarker, useVideo } from '@/store';
+import { useCanvas, useEditorMode, useFrame, useMarker, useVideo } from '@/store';
+import type { ProcessingMode } from '@/types';
 
 const AnnotationCanvas = dynamic(() => import('@/components/Canvas/AnnotationCanvas'), {
+  ssr: false,
+});
+const CalibrationCanvas = dynamic(() => import('@/components/Canvas/CalibrationCanvas'), {
   ssr: false,
 });
 
 const EditorPage: FC = () => {
   useBlockBrowserNavigation();
 
-  const [viewMode, toggleViewMode] = useToggle(['frameExtraction', 'annotation']);
-  const [labelingMode, toggleLabelingMode] = useToggle(['allLabeling', 'oneLabeling']);
   const stageElement = useElementSize();
   const { open, close, isOpen } = useMultiToggle();
 
-  const { videos, selectedVideo, selectedVideoUrl } = useVideo();
-  const {
-    videoFrames,
-    currentFrameIndex,
-    frames,
-    selectedFrame,
-    addFrame,
-    moveFrameIndex,
-    updateVideoFrames,
-  } = useFrame();
-  const { frameMarkers, createFrameMarkers, updateFrameMarkers } = useMarker();
+  const { processingMode, selectProcessingMode } = useEditorMode();
+  const { selectedVideo, selectedVideoUrl } = useVideo();
+  const { videoFrames, currentFrameIndex, frames, selectedFrame, addFrame, moveFrameIndex } =
+    useFrame();
+  const { frameMarkers, createFrameMarkers } = useMarker();
   const { canvases, selectedCanvas, addCanvas } = useCanvas();
 
   const videoRef = useRef<HTMLVideoElement>(null);
-  const stageSize = { width: stageElement.width, height: stageElement.height };
+  const operationAreaHeight = 80;
+  const stageSize = {
+    width: stageElement.width,
+    height: stageElement.height - operationAreaHeight,
+  };
 
   const handleClickCapture = useCallback(
     (video: HTMLVideoElement | null) => {
@@ -74,45 +74,50 @@ const EditorPage: FC = () => {
 
   return (
     <AppShell
-      header={<Header onOpenSidebar={() => open('sidebar')} />}
       padding='md'
       sx={(theme) => ({
         main: {
           backgroundColor:
             theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
-          paddingTop: 54,
-          paddingLeft: 0,
-          paddingRight: 0,
-          paddingBottom: 0,
+          padding: 0,
           userSelect: 'none',
         },
       })}
     >
-      <Sidebar
-        showDrawer={isOpen('sidebar')}
-        onCloseSidebar={() => close('sidebar')}
-        toggleViewMode={toggleViewMode}
-      />
-      <div className='flex h-full flex-col'>
-        <div className='flex flex-1'>
-          <MarkerEditor
-            labelingMode={labelingMode}
-            viewMode={viewMode}
-            toggleViewMode={toggleViewMode}
-            toggleLabelingMode={toggleLabelingMode}
-          />
-          <div className='flex flex-1 flex-col overflow-hidden'>
-            <Box
-              sx={(theme) => ({
-                backgroundColor:
-                  theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[1],
-                position: 'relative',
-                flexGrow: 1,
-                overflow: 'hidden',
-              })}
-              ref={stageElement.ref}
-            >
-              {viewMode === 'frameExtraction' && selectedVideoUrl ? (
+      <PanelGroup direction='horizontal'>
+        <Panel defaultSize={20} maxSize={50} className='flex flex-col'>
+          <div className='flex-1'>
+            {processingMode === 'frameExtraction' ? <PlayerEditor /> : null}
+            {processingMode === 'calibration' ? <CalibrationMarkerEditor /> : null}
+            {processingMode === 'annotation' ? <AnnotationMarkerEditor /> : null}
+          </div>
+          <Divider className='mx-1' />
+          <SideAreaOperation />
+        </Panel>
+
+        <PanelResizeHandler className='h-screen w-1' />
+
+        <Panel>
+          <Box
+            className='flex h-screen flex-col overflow-hidden'
+            sx={(theme) => ({
+              backgroundColor:
+                theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[1],
+            })}
+          >
+            <Center className='mx-auto h-20'>
+              <Select
+                value={processingMode}
+                data={[
+                  { value: 'frameExtraction', label: 'フレーム抽出' },
+                  { value: 'calibration', label: 'キャリブレーション' },
+                  { value: 'annotation', label: 'アノテーション' },
+                ]}
+                onChange={(value) => selectProcessingMode(value as ProcessingMode)}
+              />
+            </Center>
+            <div className='relative flex-1 overflow-hidden' ref={stageElement.ref}>
+              {processingMode === 'frameExtraction' && selectedVideoUrl ? (
                 <Player
                   videoUrl={selectedVideoUrl}
                   videoRef={videoRef}
@@ -120,15 +125,17 @@ const EditorPage: FC = () => {
                   onClickCapture={handleClickCapture}
                 />
               ) : null}
-              {viewMode === 'annotation' && !!selectedFrame && !!selectedCanvas ? (
+              {processingMode === 'calibration' && frames?.length > 0 && canvases?.length > 0 ? (
+                <CalibrationCanvas stageSize={stageSize} frame={frames[0]} canvas={canvases[0]} />
+              ) : null}
+              {processingMode === 'annotation' && !!selectedFrame && !!selectedCanvas ? (
                 <AnnotationCanvas
-                  labelingMode={labelingMode}
                   stageSize={stageSize}
                   selectedFrame={selectedFrame}
                   selectedCanvas={canvases[currentFrameIndex]}
                 />
               ) : null}
-            </Box>
+            </div>
             <div className='h-44'>
               {frames && frames.length !== 0 && frames.length === canvases.length ? (
                 <>
@@ -137,18 +144,13 @@ const EditorPage: FC = () => {
                 </>
               ) : null}
             </div>
-          </div>
-        </div>
-      </div>
-      {videoFrames && frameMarkers ? (
-        <ContinueModal
-          videos={videos}
-          videoFrames={videoFrames}
-          frameMarkers={frameMarkers}
-          updateVideoFrames={updateVideoFrames}
-          updateFrameMarkers={updateFrameMarkers}
-        />
-      ) : null}
+          </Box>
+        </Panel>
+        <PanelResizeHandler className='h-screen w-1' />
+
+        <Panel defaultSize={20} maxSize={50} className='flex flex-col'></Panel>
+      </PanelGroup>
+      {videoFrames && frameMarkers ? <ContinueModal /> : null}
     </AppShell>
   );
 };

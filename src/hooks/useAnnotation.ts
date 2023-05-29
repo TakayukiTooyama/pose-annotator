@@ -23,11 +23,11 @@ export const useAnnotation = () => {
   };
 
   const moveFrameAndMarkerIndex = useCallback(
-    (labelingMode: string) => {
+    (annotationMode: string) => {
       const lastMarker = currentMarkerIndex === markers.length - 1;
       const lastFrame = currentFrameIndex === frames.length - 1;
 
-      if (labelingMode === 'allLabeling') {
+      if (annotationMode === 'manualAllParts') {
         if (!lastMarker) {
           moveMarkerIndex(currentMarkerIndex + 1);
         }
@@ -52,19 +52,19 @@ export const useAnnotation = () => {
     [markers, frames, currentMarkerIndex, currentFrameIndex, moveMarkerIndex, moveFrameIndex],
   );
 
-  const handleLabeling = useCallback(
+  const handleAnnotation = useCallback(
     (
       e: KonvaEventObject<MouseEvent>,
       selectedMarker: Marker,
       scale: Scale,
-      labelingMode: string,
+      annotationMode: string,
     ) => {
       const newPosition: Position = {
         x: Math.round(e.target.getRelativePointerPosition().x * scale.x),
         y: Math.round(e.target.getRelativePointerPosition().y * scale.y),
       };
       updateMarker(selectedFrame.id, selectedMarker.label, newPosition);
-      moveFrameAndMarkerIndex(labelingMode);
+      moveFrameAndMarkerIndex(annotationMode);
     },
     [selectedFrame, updateMarker, moveFrameAndMarkerIndex],
   );
@@ -72,19 +72,18 @@ export const useAnnotation = () => {
   const handleMouseUpImage = (
     e: KonvaEventObject<MouseEvent>,
     scale: Scale,
-    labelingMode: string,
+    annotationMode: string,
   ) => {
-    // console.log('selectedMarker1', selectedMarker);
     const timeDiff = Date.now() - mouseDownTime;
     if (timeDiff < 250) {
-      handleLabeling(
+      handleAnnotation(
         e,
         selectedMarker,
         {
           x: scale.x,
           y: scale.y,
         },
-        labelingMode,
+        annotationMode,
       );
     }
   };
@@ -137,6 +136,6 @@ export const useAnnotation = () => {
     handleHoverCircle,
     handleDragStartCircle,
     handleDragEndCircle,
-    handleLabeling,
+    handleAnnotation,
   };
 };

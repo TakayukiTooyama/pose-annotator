@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react';
 
-import { useMarkerSetting } from '@/store';
+import type { MarkerOption } from '@/types';
 
-export const useCreateMarkerLabel = () => {
+export const useCreateMarkerLabel = (
+  options: MarkerOption[],
+  createMarkerOption: (newLabel: string) => void,
+) => {
   const [newLabel, setNewLabel] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-
-  const { options, createMarkerOption } = useMarkerSetting();
 
   const handleChangeLabel = useCallback((e: React.FormEvent<HTMLInputElement>) => {
     const inputLabel = e.currentTarget.value;

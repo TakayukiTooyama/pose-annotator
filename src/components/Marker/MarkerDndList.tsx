@@ -7,12 +7,15 @@ import { useEffect, useState } from 'react';
 
 import { MarkerDndListItem } from '@/components/Marker';
 import { useMarkerSetting } from '@/store';
+import type { MarkerOption } from '@/types';
 
-export const MarkerDndList: FC = () => {
-  const { options, updateMarkerOptions, deleteMarkerOption, updateMarkerColor } =
-    useMarkerSetting();
+type Props = {
+  options: MarkerOption[];
+};
 
+export const MarkerDndList: FC<Props> = ({ options }) => {
   const [dndOptions, setDndOptions] = useState(options);
+  const { updateMarkerOptions } = useMarkerSetting();
 
   useEffect(() => {
     setDndOptions(options);
@@ -46,13 +49,7 @@ export const MarkerDndList: FC = () => {
       <SortableContext items={dndOptions} strategy={verticalListSortingStrategy}>
         <div className='grid gap-2'>
           {dndOptions.map((marker) => (
-            <MarkerDndListItem
-              key={marker.id}
-              marker={marker}
-              markers={options}
-              deleteMarkerOption={deleteMarkerOption}
-              updateMarkerColor={updateMarkerColor}
-            />
+            <MarkerDndListItem key={marker.id} marker={marker} markers={options} />
           ))}
         </div>
       </SortableContext>

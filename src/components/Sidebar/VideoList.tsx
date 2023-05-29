@@ -1,23 +1,23 @@
-import type { FC, SetStateAction } from 'react';
+import type { FC } from 'react';
 import { TbSquareMinus } from 'react-icons/tb';
 
 import { IconButton } from '@/components/Common';
 import { VideoListItem } from '@/components/Sidebar/VideoListItem';
-import { useVideo } from '@/store';
+import { useEditorMode, useVideo } from '@/store';
 import type { Video } from '@/types';
 
 type Props = {
   videos: Video[];
   selectedIndex: number;
-  toggleViewMode: (value?: SetStateAction<string> | undefined) => void;
 };
 
-export const VideoList: FC<Props> = ({ videos, selectedIndex, toggleViewMode }) => {
+export const VideoList: FC<Props> = ({ videos, selectedIndex }) => {
   const { deleteVideo, selectVideoIndex } = useVideo();
+  const { selectProcessingMode } = useEditorMode();
 
   const handleSelectVideo = (index: number) => {
     selectVideoIndex(index);
-    toggleViewMode('frameExtraction');
+    selectProcessingMode('frameExtraction');
   };
 
   return (
@@ -29,6 +29,7 @@ export const VideoList: FC<Props> = ({ videos, selectedIndex, toggleViewMode }) 
             active={index === selectedIndex}
             onSelectVideo={() => handleSelectVideo(index)}
           />
+
           <IconButton
             icon={TbSquareMinus}
             variant='light'

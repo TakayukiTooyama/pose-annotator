@@ -2,22 +2,28 @@ import { Button, Center, Flex, Group } from '@mantine/core';
 import type { FC } from 'react';
 import { Image } from 'react-konva';
 
-import { GroupLayer, Markers, Stage, StickPicture } from '@/components/Canvas';
-import { useAnnotation, useCanvasOperation, useFrameSize } from '@/hooks';
-import { useEditorMode, useMarker, useMarkerSetting } from '@/store';
-import type { Frame, MarkerSetting } from '@/types';
+import {
+  CalibrationInput,
+  CalibrationStick,
+  GroupLayer,
+  Markers,
+  Stage,
+} from '@/components/Canvas';
+import { defaultCalibrationMarkerOption } from '@/constant';
+import { useCalibration, useCanvasOperation, useFrameSize } from '@/hooks';
+import { useCalibrationMarker, useMarkerSetting } from '@/store';
+import type { Dimensions, Frame, MarkerSetting } from '@/types';
 
 type Props = {
-  stageSize: { width: number; height: number };
-  selectedFrame: Frame;
-  selectedCanvas: HTMLCanvasElement;
+  stageSize: Dimensions;
+  frame: Frame;
+  canvas: HTMLCanvasElement;
 };
 
-const AnnotationCanvas: FC<Props> = ({ stageSize, selectedFrame, selectedCanvas }) => {
-  const { annotationMode } = useEditorMode();
-  const { markers } = useMarker();
-  const { options, radius, opacity } = useMarkerSetting();
-  const { frameSize, positionScale } = useFrameSize(stageSize, selectedFrame);
+const CalibrationCanvas: FC<Props> = ({ stageSize, frame, canvas }) => {
+  const { markers } = useCalibrationMarker();
+  const { radius, opacity } = useMarkerSetting();
+  const { frameSize, positionScale } = useFrameSize(stageSize, frame);
 
   const {
     stageRef,
@@ -38,7 +44,7 @@ const AnnotationCanvas: FC<Props> = ({ stageSize, selectedFrame, selectedCanvas 
     handleDoubleTapCircle,
     handleDragStartCircle,
     handleDragEndCircle,
-  } = useAnnotation();
+  } = useCalibration();
 
   return (
     <Flex direction='column' h='100%'>
@@ -56,18 +62,20 @@ const AnnotationCanvas: FC<Props> = ({ stageSize, selectedFrame, selectedCanvas 
               ref={imageRef}
               width={frameSize.width}
               height={frameSize.height}
-              image={selectedCanvas}
-              onMouseUp={(e) => handleMouseUpImage(e, positionScale, annotationMode)}
+              image={canvas}
+              onMouseUp={(e) => handleMouseUpImage(e, positionScale)}
               onMouseDown={handleMouseDownImage}
               alt=''
             />
+            <CalibrationStick markers={markers} positionScale={positionScale} />
             {markers && markers.length > 0 ? (
               <>
-                <StickPicture markers={markers} positionScale={positionScale} />
                 <Markers
                   circleRef={circleRef}
                   markers={markers}
-                  markerSetting={{ options, radius, opacity } as MarkerSetting}
+                  markerSetting={
+                    { options: defaultCalibrationMarkerOption, radius, opacity } as MarkerSetting
+                  }
                   positionScale={positionScale}
                   onRightClick={handleRightClick}
                   onDoubleTapCircle={handleDoubleTapCircle}
@@ -85,10 +93,11 @@ const AnnotationCanvas: FC<Props> = ({ stageSize, selectedFrame, selectedCanvas 
           <Button variant='default' onClick={handleFitImage}>
             Fit
           </Button>
+          <CalibrationInput />
         </Group>
       </Center>
     </Flex>
   );
 };
 
-export default AnnotationCanvas;
+export default CalibrationCanvas;

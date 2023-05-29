@@ -1,10 +1,11 @@
+import { defaultMarkerSetting } from '@/constant';
 import { useMarkerSettingStore } from '@/store/useMarkerSettingStore';
 import { useStore } from '@/store/useStore';
-import { defaultMarkerSetting } from '@/types';
 
 export const useMarkerSetting = () => {
   const options =
     useStore(useMarkerSettingStore, (state) => state.options) || defaultMarkerSetting.options;
+  const calibrationOptions = useMarkerSettingStore((state) => state.calibrationOptions);
   const radius =
     useStore(useMarkerSettingStore, (state) => state.radius) || defaultMarkerSetting.radius;
   const opacity =
@@ -21,6 +22,7 @@ export const useMarkerSetting = () => {
 
   return {
     options,
+    calibrationOptions,
     radius,
     opacity,
     updateMarkerLabel,

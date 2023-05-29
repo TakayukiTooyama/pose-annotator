@@ -63,10 +63,7 @@ export const FrameList: FC<Props> = ({ frames, canvases }) => {
   );
 
   return (
-    <div
-      className='relative h-32  cursor-pointer overflow-x-auto overflow-y-hidden'
-      ref={frameListViewport}
-    >
+    <div className='relative h-32  cursor-pointer overflow-hidden' ref={frameListViewport}>
       <Stage
         width={frameListViewport.current?.clientWidth}
         height={HEIGHT}
@@ -108,7 +105,7 @@ export const FrameList: FC<Props> = ({ frames, canvases }) => {
               {currentFrameIndex === index && <Graphics draw={(g) => frameNumberDraw(g, index)} />}
             </Fragment>
           ))}
-          <Graphics draw={backgroundDraw} x={(canvases.length + 1) * WIDTH} />
+          <Graphics draw={backgroundDraw} x={canvases.length * WIDTH} />
         </Container>
       </Stage>
     </div>
