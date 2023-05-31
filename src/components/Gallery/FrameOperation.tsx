@@ -25,8 +25,16 @@ export const FrameOperation: FC<Props> = ({ frames }) => {
       <div className='w-[34px] opacity-0' />
       <Group className='flex items-center'>
         <div className='flex space-x-1'>
-          <IconButton icon={TbChevronsLeft} onClick={() => moveFrameIndex(0)} />
-          <IconButton icon={TbChevronLeft} onClick={() => moveFrameIndex(currentFrameIndex - 1)} />
+          <IconButton
+            icon={TbChevronsLeft}
+            onClick={() => moveFrameIndex(0)}
+            disabled={currentFrameIndex === 0}
+          />
+          <IconButton
+            icon={TbChevronLeft}
+            onClick={() => moveFrameIndex(currentFrameIndex - 1)}
+            disabled={currentFrameIndex === 0}
+          />
         </div>
         <div className='flex items-center'>
           <FrameCounter />
@@ -34,8 +42,16 @@ export const FrameOperation: FC<Props> = ({ frames }) => {
           <Text text={`${frames.length - 1}`} className='w-10 text-center' />
         </div>
         <div className='flex space-x-1'>
-          <IconButton icon={TbChevronRight} onClick={() => moveFrameIndex(currentFrameIndex + 1)} />
-          <IconButton icon={TbChevronsRight} onClick={() => moveFrameIndex(frames.length - 1)} />
+          <IconButton
+            icon={TbChevronRight}
+            onClick={() => moveFrameIndex(currentFrameIndex + 1)}
+            disabled={frames.length === currentFrameIndex + 1}
+          />
+          <IconButton
+            icon={TbChevronsRight}
+            onClick={() => moveFrameIndex(frames.length - 1)}
+            disabled={frames.length === currentFrameIndex + 1}
+          />
         </div>
       </Group>
       <IconButton
