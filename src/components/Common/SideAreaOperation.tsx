@@ -1,7 +1,6 @@
 import { TbMoonStars, TbSun } from 'react-icons/tb';
 
-import { IconButton } from '@/components/Common';
-import { DLCTrainingDataFormatter } from '@/components/Header';
+import { DLCTrainingDataFormatter, IconButton } from '@/components/Common';
 import { useDarkMode } from '@/hooks';
 
 export const SideAreaOperation = () => {

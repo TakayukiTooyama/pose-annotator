@@ -1,3 +1,4 @@
+export { DLCTrainingDataFormatter } from './DLCTrainingDataFormatter';
 export { IconButton } from './IconButton';
 export { Label } from './Label';
 export { ContinueModal } from './Modal/ContinueModal';
