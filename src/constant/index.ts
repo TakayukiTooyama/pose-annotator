@@ -23,14 +23,6 @@ export const defaultMarkerOption: MarkerOption[] = [
   { id: '19', label: 'LFootIndex', color: '#0015FF' },
 ];
 
-export const defaultCalibrationMarkerOption: MarkerOption[] = [
-  { id: '0', label: '原点', color: '#880044' },
-  { id: '1', label: '左上', color: '#D000FF' },
-  { id: '2', label: '左下', color: '#00A6FF' },
-  { id: '3', label: '右上', color: '#FF6F00' },
-  { id: '4', label: '右下', color: '#0015FF' },
-];
-
 export const defaultMarkerSetting: MarkerSetting = {
   radius: 3,
   opacity: 0.9,

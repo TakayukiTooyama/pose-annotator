@@ -17,21 +17,18 @@ export type MarkerSetting = {
 // TODO:8.チュートリアルの作成
 // TODO:9.自動分析機能（ChatGPTを使用）
 
-export type ProcessingMode = 'frameExtraction' | 'annotation' | 'calibration';
-export type ExtractMode = 'allFrames' | 'selectFrame';
-export type AnnotationMode = 'manualAllParts' | 'manualOnePart' | 'tracking';
-export type CalibrationMode = 'static' | 'panningWithMarkers' | 'panningWithoutMarkers';
+export type ProcessingMode = 'frameExtraction' | 'annotation';
+export type ExtractMode = 'selectFrame'; // 今後 'all' | 'random'などが増えるかも
+export type AnnotationMode = 'allParts' | 'onePart';
 
 export type EditorMode = {
   processingMode: ProcessingMode;
   extractMode: ExtractMode;
   annotationMode: AnnotationMode;
-  calibrationMode: CalibrationMode;
 };
 
 export type VideoFrames = Record<string, Frame[]>;
 export type FrameMarkers = Record<string, Marker[]>;
-export type CalibrationMarkers = Record<string, Marker[]>;
 
 export type MarkerOption = {
   id: string;

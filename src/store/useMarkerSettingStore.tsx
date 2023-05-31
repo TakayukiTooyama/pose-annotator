@@ -2,8 +2,7 @@ import { v4 as uuid } from 'uuid';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import { defaultCalibrationMarkerOption, defaultMarkerOption } from '@/constant';
-import { useEditorModeStore } from '@/store/useEditorModeStore';
+import { defaultMarkerOption } from '@/constant';
 import { useMarkerStore } from '@/store/useMarkerStore';
 import type { MarkerOption } from '@/types';
 import { generateNewColor } from '@/utils';
@@ -12,7 +11,6 @@ type State = {
   radius: number;
   opacity: number;
   options: MarkerOption[];
-  calibrationOptions: MarkerOption[];
 };
 type Action = {
   createMarkerOption: (newLabel: string) => void;
@@ -32,7 +30,6 @@ export const useMarkerSettingStore = create<State & Action>()(
       radius: 3,
       opacity: 0.8,
       options: defaultMarkerOption,
-      calibrationOptions: defaultCalibrationMarkerOption,
       createMarkerOption: (newLabel: string) => {
         const newMarkerOption: MarkerOption = {
           id: uuid(),
@@ -57,70 +54,31 @@ export const useMarkerSettingStore = create<State & Action>()(
         set(() => ({ opacity: newOpacity }));
       },
       updateMarkerLabel: (newLabel: string, selectOption: MarkerOption) => {
-        const processingMode = useEditorModeStore.getState().processingMode;
-        if (processingMode === 'annotation') {
-          set((state) => ({
-            options: state.options.map((marker) => ({
-              ...marker,
-              label: marker.label === selectOption.label ? newLabel : marker.label,
-            })),
-          }));
-        }
-        if (processingMode === 'calibration') {
-          set((state) => ({
-            calibrationOptions: state.calibrationOptions.map((marker) => ({
-              ...marker,
-              label: marker.label === selectOption.label ? newLabel : marker.label,
-            })),
-          }));
-        }
+        set((state) => ({
+          options: state.options.map((marker) => ({
+            ...marker,
+            label: marker.label === selectOption.label ? newLabel : marker.label,
+          })),
+        }));
       },
       updateMarkerColor: (newColor: string, selectOption: MarkerOption) => {
-        const processingMode = useEditorModeStore.getState().processingMode;
-        if (processingMode === 'annotation') {
-          set((state) => ({
-            options: state.options.map((marker) => ({
-              ...marker,
-              color: marker.label === selectOption.label ? newColor : marker.color,
-            })),
-          }));
-        }
-        if (processingMode === 'calibration') {
-          set((state) => ({
-            calibrationOptions: state.calibrationOptions.map((marker) => ({
-              ...marker,
-              color: marker.label === selectOption.label ? newColor : marker.color,
-            })),
-          }));
-        }
+        set((state) => ({
+          options: state.options.map((marker) => ({
+            ...marker,
+            color: marker.label === selectOption.label ? newColor : marker.color,
+          })),
+        }));
       },
       updateMarkerOptionsId: () => {
-        const processingMode = useEditorModeStore.getState().processingMode;
-        if (processingMode === 'annotation') {
-          set((state) => ({
-            options: state.options.map((marker, index) => ({
-              ...marker,
-              id: `${index}`,
-            })),
-          }));
-        }
-        if (processingMode === 'calibration') {
-          set((state) => ({
-            calibrationOptions: state.calibrationOptions.map((marker, index) => ({
-              ...marker,
-              id: `${index}`,
-            })),
-          }));
-        }
+        set((state) => ({
+          options: state.options.map((marker, index) => ({
+            ...marker,
+            id: `${index}`,
+          })),
+        }));
       },
       updateMarkerOptions: (newMarkerOptions: MarkerOption[]) => {
-        const processingMode = useEditorModeStore.getState().processingMode;
-        if (processingMode === 'annotation') {
-          set(() => ({ options: newMarkerOptions }));
-        }
-        if (processingMode === 'calibration') {
-          set(() => ({ calibrationOptions: newMarkerOptions }));
-        }
+        set(() => ({ options: newMarkerOptions }));
       },
       deleteMarkerOption: (selectOption: MarkerOption) => {
         const newOptions = get()

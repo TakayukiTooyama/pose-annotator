@@ -1,4 +1,4 @@
-import { AppShell, Box, Center, Divider } from '@mantine/core';
+import { AppShell, Box, Divider } from '@mantine/core';
 import { useElementSize } from '@mantine/hooks';
 import dynamic from 'next/dynamic';
 import type { FC } from 'react';
@@ -8,16 +8,13 @@ import { Panel, PanelGroup } from 'react-resizable-panels';
 import { ContinueModal, PanelResizeHandler, Select } from '@/components/Common';
 import { SideAreaOperation } from '@/components/Common/SideAreaOperation';
 import { FrameList, FrameOperation } from '@/components/Gallery';
-import { AnnotationMarkerEditor, CalibrationMarkerEditor } from '@/components/Marker';
+import { AnnotationMarkerEditor } from '@/components/Marker';
 import { Player, PlayerEditor } from '@/components/Player';
-import { useBlockBrowserNavigation, useMultiToggle } from '@/hooks';
+import { useBlockBrowserNavigation } from '@/hooks';
 import { useCanvas, useEditorMode, useFrame, useMarker, useVideo } from '@/store';
 import type { ProcessingMode } from '@/types';
 
 const AnnotationCanvas = dynamic(() => import('@/components/Canvas/AnnotationCanvas'), {
-  ssr: false,
-});
-const CalibrationCanvas = dynamic(() => import('@/components/Canvas/CalibrationCanvas'), {
   ssr: false,
 });
 
@@ -25,8 +22,6 @@ const EditorPage: FC = () => {
   useBlockBrowserNavigation();
 
   const stageElement = useElementSize();
-  const { open, close, isOpen } = useMultiToggle();
-
   const { processingMode, selectProcessingMode } = useEditorMode();
   const { selectedVideo, selectedVideoUrl } = useVideo();
   const { videoFrames, currentFrameIndex, frames, selectedFrame, addFrame, moveFrameIndex } =
@@ -86,9 +81,17 @@ const EditorPage: FC = () => {
     >
       <PanelGroup direction='horizontal'>
         <Panel defaultSize={20} maxSize={50} className='flex flex-col'>
-          <div className='flex-1'>
+          <div className='flex-1 space-y-4 p-4'>
+            <Select
+              width='100%'
+              value={processingMode}
+              data={[
+                { value: 'frameExtraction', label: 'フレーム抽出' },
+                { value: 'annotation', label: 'アノテーション' },
+              ]}
+              onChange={(value) => selectProcessingMode(value as ProcessingMode)}
+            />
             {processingMode === 'frameExtraction' ? <PlayerEditor /> : null}
-            {processingMode === 'calibration' ? <CalibrationMarkerEditor /> : null}
             {processingMode === 'annotation' ? <AnnotationMarkerEditor /> : null}
           </div>
           <Divider className='mx-1' />
@@ -105,17 +108,9 @@ const EditorPage: FC = () => {
                 theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[1],
             })}
           >
-            <Center className='mx-auto h-20'>
-              <Select
-                value={processingMode}
-                data={[
-                  { value: 'frameExtraction', label: 'フレーム抽出' },
-                  { value: 'calibration', label: 'キャリブレーション' },
-                  { value: 'annotation', label: 'アノテーション' },
-                ]}
-                onChange={(value) => selectProcessingMode(value as ProcessingMode)}
-              />
-            </Center>
+            {/* <Center className='mx-auto h-20'>
+
+            </Center> */}
             <div className='relative flex-1 overflow-hidden' ref={stageElement.ref}>
               {processingMode === 'frameExtraction' && selectedVideoUrl ? (
                 <Player
@@ -124,9 +119,6 @@ const EditorPage: FC = () => {
                   stageSize={stageSize}
                   onClickCapture={handleClickCapture}
                 />
-              ) : null}
-              {processingMode === 'calibration' && frames?.length > 0 && canvases?.length > 0 ? (
-                <CalibrationCanvas stageSize={stageSize} frame={frames[0]} canvas={canvases[0]} />
               ) : null}
               {processingMode === 'annotation' && !!selectedFrame && !!selectedCanvas ? (
                 <AnnotationCanvas
@@ -148,7 +140,7 @@ const EditorPage: FC = () => {
         </Panel>
         <PanelResizeHandler className='h-screen w-1' />
 
-        <Panel defaultSize={20} maxSize={50} className='flex flex-col'></Panel>
+        {/* <Panel defaultSize={20} maxSize={50} className='flex flex-col'></Panel> */}
       </PanelGroup>
       {videoFrames && frameMarkers ? <ContinueModal /> : null}
     </AppShell>

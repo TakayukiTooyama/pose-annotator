@@ -5,14 +5,13 @@ import { useCallback } from 'react';
 import { Text } from '@/components/Common';
 import { FitModal } from '@/components/Common/Modal/FitModal';
 import { VideoAddButton } from '@/components/Sidebar';
-import { useCalibrationMarker, useFrame, useMarker, useVideo } from '@/store';
+import { useFrame, useMarker, useVideo } from '@/store';
 import { extractFilename } from '@/utils';
 
 export const ContinueModal: FC = () => {
   const { videos } = useVideo();
   const { updateVideoFrames, videoFrames } = useFrame();
   const { updateFrameMarkers, frameMarkers } = useMarker();
-  const { updateCalibrationMarkers, calibrationMarkers } = useCalibrationMarker();
 
   const videoKeys = Object.keys(videoFrames);
   const importedVideoNames = videos
@@ -33,23 +32,10 @@ export const ContinueModal: FC = () => {
           selectedVideoNames.includes(extractFilename(key)),
         ),
       );
-      const newCalibrationMarkers = Object.fromEntries(
-        Object.entries(calibrationMarkers).filter(([key]) =>
-          selectedVideoNames.includes(extractFilename(key)),
-        ),
-      );
       updateVideoFrames(newVideoFrames);
       updateFrameMarkers(newFrameMarkers);
-      updateCalibrationMarkers(newCalibrationMarkers);
     },
-    [
-      calibrationMarkers,
-      frameMarkers,
-      videoFrames,
-      updateFrameMarkers,
-      updateVideoFrames,
-      updateCalibrationMarkers,
-    ],
+    [frameMarkers, videoFrames, updateFrameMarkers, updateVideoFrames],
   );
 
   return (

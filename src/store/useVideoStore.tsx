@@ -1,7 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import { create } from 'zustand';
 
-import { useCalibrationMarkerStore } from '@/store/useCalibrationMarkerStore';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useFrameStore } from '@/store/useFrameStore';
 import { useMarkerStore } from '@/store/useMarkerStore';
@@ -41,10 +40,6 @@ export const useVideoStore = create<State & Action>()((set, get) => ({
         file,
       }));
 
-    newVideos.forEach(({ name }) =>
-      useCalibrationMarkerStore.getState().createCalibrationMarkers(name),
-    );
-
     if (get().videos.length === 0) {
       useCanvasStore.getState().createCanvases(newVideos[0]);
     }
@@ -65,7 +60,6 @@ export const useVideoStore = create<State & Action>()((set, get) => ({
     }
     useFrameStore.getState().deleteVideoFrames(selectedVideo.name);
     useMarkerStore.getState().deleteFrameMarkers(selectedVideo.name);
-    useCalibrationMarkerStore.getState().deleteCalibrationMarkers(selectedVideo.name);
 
     const newVideos = get().videos.filter((video) => video.name !== selectedVideo.name);
     const currentVideoIndex = get().currentVideoIndex;
@@ -89,7 +83,6 @@ export const useVideoStore = create<State & Action>()((set, get) => ({
   deleteAllVideos: () => {
     useFrameStore.getState().deleteAllVideoFrames();
     useMarkerStore.getState().deleteAllFrameMarkers();
-    useCalibrationMarkerStore.getState().deleteAllCalibrationMarkers();
     set(() => ({ videos: [] }));
   },
   selectVideoIndex: (index: number) => {

@@ -27,7 +27,7 @@ export const useAnnotation = () => {
       const lastMarker = currentMarkerIndex === markers.length - 1;
       const lastFrame = currentFrameIndex === frames.length - 1;
 
-      if (annotationMode === 'manualAllParts') {
+      if (annotationMode === 'allParts') {
         if (!lastMarker) {
           moveMarkerIndex(currentMarkerIndex + 1);
         }

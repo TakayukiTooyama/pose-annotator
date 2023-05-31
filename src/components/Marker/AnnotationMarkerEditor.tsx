@@ -20,11 +20,11 @@ export const AnnotationMarkerEditor: FC = () => {
 
   const [showModal, showModalHandler] = useDisclosure(false);
   const { markers, currentMarkerIndex, moveMarkerIndex } = useMarker();
+  const { annotationMode, selectAnnotationMode } = useEditorMode();
 
   const { options, createMarkerOption, updateMarkerOptionsId } = useMarkerSetting();
 
   const { setMarkerListViewport } = useScrollViewport();
-  const { annotationMode, selectAnnotationMode } = useEditorMode();
 
   useEffect(() => {
     setMarkerListViewport(markerListViewport.current);
@@ -46,44 +46,41 @@ export const AnnotationMarkerEditor: FC = () => {
 
   return (
     <>
-      <Stack className='p-4'>
-        {/* MarkerOperation */}
-        <div className='flex items-center justify-between space-x-4'>
-          <IconButton icon={TbEdit} onClick={handleOpenModal} />
-          <Select
-            value={annotationMode}
-            width='100%'
-            data={[
-              { value: 'manualAllParts', label: 'Manual All Parts' },
-              { value: 'manualOnePart', label: 'Manual One Part' },
-              { value: 'tracking', label: 'Tracking' },
-            ]}
-            onChange={(value) => selectAnnotationMode(value as AnnotationMode)}
-          />
-        </div>
+      {/* MarkerOperation */}
+      <div className='flex items-center justify-between space-x-4'>
+        <IconButton icon={TbEdit} onClick={handleOpenModal} />
+        <Select
+          value={annotationMode}
+          width='100%'
+          data={[
+            { value: 'allParts', label: 'All Parts' },
+            { value: 'onePart', label: 'One Part' },
+          ]}
+          onChange={(value) => selectAnnotationMode(value as AnnotationMode)}
+        />
+      </div>
 
-        {/* MarkerList */}
-        <ScrollArea.Autosize
-          className='overflow-y-auto overflow-x-hidden'
-          style={{ maxHeight: 'calc(100vh - 320px)' }}
-          ref={markerListViewport}
-        >
-          <MarkerList
-            markerOptions={options || []}
-            currentMarkerIndex={currentMarkerIndex}
-            labeledList={labeledList}
-            moveMarkerIndex={moveMarkerIndex}
-          />
-        </ScrollArea.Autosize>
+      {/* MarkerList */}
+      <ScrollArea.Autosize
+        className='overflow-y-auto overflow-x-hidden'
+        style={{ maxHeight: 'calc(100vh - 370px)' }}
+        ref={markerListViewport}
+      >
+        <MarkerList
+          markerOptions={options || []}
+          currentMarkerIndex={currentMarkerIndex}
+          labeledList={labeledList}
+          moveMarkerIndex={moveMarkerIndex}
+        />
+      </ScrollArea.Autosize>
 
-        {/* MarkerCounter */}
-        <Label label={`${labeledList.length} / ${options?.length}`} />
+      {/* MarkerCounter */}
+      <Label label={`${labeledList.length} / ${options?.length}`} />
 
-        {/* MarkerOptionSlider */}
-        <Stack className='h-32'>
-          <MarkerSizeSlider />
-          <MarkerOpacitySlider />
-        </Stack>
+      {/* MarkerOptionSlider */}
+      <Stack className='h-32'>
+        <MarkerSizeSlider />
+        <MarkerOpacitySlider />
       </Stack>
 
       {/* MarkerEditModal */}
