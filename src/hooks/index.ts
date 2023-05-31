@@ -7,6 +7,8 @@ export { useDarkMode } from './useDarkMode';
 export { useDLCFormat } from './useDLCFormat';
 export { useFrameSize } from './useFrameSize';
 export { useMultiToggle } from './useMultiToggle';
+export { useOpenCV } from './useOpenCV';
+export { usePanningCalibration } from './usePanningCalibration';
 export { useUpdateMarkerOption } from './useUpdateMarkerOption';
 export { useVideoListFilter } from './useVideoListFilter';
 export { useVideoSize } from './useVideoSize';

@@ -1,6 +1,9 @@
 import { Button, Center, Flex, Group } from '@mantine/core';
+import type Konva from 'konva';
+import type { KonvaEventObject } from 'konva/lib/Node';
 import type { FC } from 'react';
-import { Image } from 'react-konva';
+import { useRef, useState } from 'react';
+import { Circle, Image } from 'react-konva';
 
 import {
   CalibrationInput,
@@ -10,8 +13,14 @@ import {
   Stage,
 } from '@/components/Canvas';
 import { defaultCalibrationMarkerOption } from '@/constant';
-import { useCalibration, useCanvasOperation, useFrameSize } from '@/hooks';
-import { useCalibrationMarker, useMarkerSetting } from '@/store';
+import {
+  useCalibration,
+  useCanvasOperation,
+  useFrameSize,
+  useOpenCV,
+  usePanningCalibration,
+} from '@/hooks';
+import { useCalibrationMarker, useEditorMode, useMarkerSetting } from '@/store';
 import type { Dimensions, Frame, MarkerSetting } from '@/types';
 
 type Props = {
@@ -23,7 +32,10 @@ type Props = {
 const CalibrationCanvas: FC<Props> = ({ stageSize, frame, canvas }) => {
   const { markers } = useCalibrationMarker();
   const { radius, opacity } = useMarkerSetting();
+  const { calibrationMode } = useEditorMode();
   const { frameSize, positionScale } = useFrameSize(stageSize, frame);
+  const { cv } = useOpenCV();
+  const { processedImage, processImage } = usePanningCalibration(canvas, cv);
 
   const {
     stageRef,
@@ -46,6 +58,29 @@ const CalibrationCanvas: FC<Props> = ({ stageSize, frame, canvas }) => {
     handleDragEndCircle,
   } = useCalibration();
 
+  const imageRef2 = useRef<Konva.Image>(null);
+  const [selectedColor, setSelectedColor] = useState<[number, number, number]>([0, 0, 0]);
+
+  const handleImageClick = (e: KonvaEventObject<MouseEvent>) => {
+    const x = Math.round(e.target.getRelativePointerPosition().x);
+    const y = Math.round(e.target.getRelativePointerPosition().y);
+
+    const canvas = imageRef2.current?.toCanvas();
+    if (!canvas) {
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return;
+    }
+
+    const imageData = ctx.getImageData(x, y, 1, 1).data;
+    processImage(imageData[0]);
+
+    setSelectedColor([imageData[0], imageData[1], imageData[2]]);
+  };
+
   return (
     <Flex direction='column' h='100%'>
       <Center className='relative flex-1'>
@@ -58,15 +93,28 @@ const CalibrationCanvas: FC<Props> = ({ stageSize, frame, canvas }) => {
             onZoom={handleZoom}
             onDragEndGroup={handleDragEndGroup}
           >
-            <Image
-              ref={imageRef}
-              width={frameSize.width}
-              height={frameSize.height}
-              image={canvas}
-              onMouseUp={(e) => handleMouseUpImage(e, positionScale)}
-              onMouseDown={handleMouseDownImage}
-              alt=''
-            />
+            {calibrationMode === 'static' ? (
+              <Image
+                ref={imageRef}
+                width={frameSize.width}
+                height={frameSize.height}
+                image={canvas}
+                onMouseUp={(e) => handleMouseUpImage(e, positionScale)}
+                onMouseDown={handleMouseDownImage}
+                alt=''
+              />
+            ) : null}
+            {calibrationMode === 'panningWithMarkers' ? (
+              <Image
+                ref={imageRef2}
+                width={frameSize.width}
+                height={frameSize.height}
+                image={canvas}
+                onMouseUp={handleImageClick}
+                onMouseDown={handleMouseDownImage}
+                alt=''
+              />
+            ) : null}
             <CalibrationStick markers={markers} positionScale={positionScale} />
             {markers && markers.length > 0 ? (
               <>
@@ -85,15 +133,27 @@ const CalibrationCanvas: FC<Props> = ({ stageSize, frame, canvas }) => {
                 />
               </>
             ) : null}
+            <Circle
+              x={15}
+              y={15}
+              radius={10}
+              fill={`rgb(${selectedColor[0]}, ${selectedColor[1]}, ${selectedColor[2]})`}
+            />
           </GroupLayer>
         </Stage>
       </Center>
+      <canvas ref={processedImage} width={300} height={180} />
       <Center h={80}>
         <Group spacing='sm'>
+          <Button variant='default' onClick={() => processImage(selectedColor[0])}>
+            マーカー取得
+          </Button>
           <Button variant='default' onClick={handleFitImage}>
             Fit
           </Button>
-          <CalibrationInput />
+          {calibrationMode === 'static' ? <CalibrationInput /> : null}
+          {/* マーカーの色選択, 競技場の色選択 */}
+          {/* {calibrationMode === 'panningWithMarkers' ? <>hello</> : null} */}
         </Group>
       </Center>
     </Flex>
