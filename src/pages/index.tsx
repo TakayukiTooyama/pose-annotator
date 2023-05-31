@@ -86,8 +86,8 @@ const EditorPage: FC = () => {
               width='100%'
               value={processingMode}
               data={[
-                { value: 'frameExtraction', label: 'フレーム抽出' },
-                { value: 'annotation', label: 'アノテーション' },
+                { value: 'frameExtraction', label: 'Frame Extract' },
+                { value: 'annotation', label: 'Annotation' },
               ]}
               onChange={(value) => selectProcessingMode(value as ProcessingMode)}
             />
@@ -108,9 +108,6 @@ const EditorPage: FC = () => {
                 theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[1],
             })}
           >
-            {/* <Center className='mx-auto h-20'>
-
-            </Center> */}
             <div className='relative flex-1 overflow-hidden' ref={stageElement.ref}>
               {processingMode === 'frameExtraction' && selectedVideoUrl ? (
                 <Player
@@ -138,9 +135,6 @@ const EditorPage: FC = () => {
             </div>
           </Box>
         </Panel>
-        <PanelResizeHandler className='h-screen w-1' />
-
-        {/* <Panel defaultSize={20} maxSize={50} className='flex flex-col'></Panel> */}
       </PanelGroup>
       {videoFrames && frameMarkers ? <ContinueModal /> : null}
     </AppShell>
